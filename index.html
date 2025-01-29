@@ -36,7 +36,7 @@
     resizeCanvas();
 
     // Ensure minimum speed
-    const MIN_SPEED = 1; // Minimum speed for logos
+    const MIN_SPEED = 2; // Minimum speed for logos
 
     class Logo {
       constructor(imageSrc, x, y, dx, dy) {
@@ -79,10 +79,11 @@
 
     const bouncingLogos = [];
     logos.forEach((logo, index) => {
-      const x = Math.random() * (canvas.width - 100);
-      const y = Math.random() * (canvas.height - 50);
-      const dx = (Math.random() - 0.5) * 4; // Speed in x-axis
-      const dy = (Math.random() - 0.5) * 4; // Speed in y-axis
+      // Ensure that logos start fully within the screen bounds
+      const x = Math.random() * (canvas.width - 150); // Leave room for the logo size
+      const y = Math.random() * (canvas.height - 150); // Leave room for the logo size
+      const dx = (Math.random() - 0.5) * 4 + MIN_SPEED; // Speed in x-axis (with a minimum speed)
+      const dy = (Math.random() - 0.5) * 4 + MIN_SPEED; // Speed in y-axis (with a minimum speed)
       bouncingLogos.push(new Logo(logo, x, y, dx, dy));
     });
 
