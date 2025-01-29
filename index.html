@@ -39,6 +39,12 @@
       constructor(imageSrc, x, y, dx, dy, width = 300, height = 300) {
         this.image = new Image();
         this.image.src = imageSrc;
+        this.loaded = false; // Add a flag to track if the image is loaded
+
+        this.image.onload = () => {
+          this.loaded = true; // Set flag to true when the image is loaded
+        };
+
         this.x = x;
         this.y = y;
         this.dx = dx;
@@ -48,7 +54,9 @@
       }
 
       draw() {
-        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        if (this.loaded) {
+          ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        }
       }
 
       update() {
@@ -76,8 +84,7 @@
       bouncingLogos.forEach(logo => logo.update());
       requestAnimationFrame(animate);
     }
-
-    animate();
+    animate(); // Start the animation once all images are loadedimg {
   </script>
 </body>
 </html>
