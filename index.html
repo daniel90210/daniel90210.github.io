@@ -35,8 +35,11 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    // Ensure minimum speed
+    const MIN_SPEED = 1; // Minimum speed for logos
+
     class Logo {
-      constructor(imageSrc, x, y, dx, dy, width = 300, height = 300) {
+      constructor(imageSrc, x, y, dx, dy) {
         this.image = new Image();
         this.image.src = imageSrc;
         this.loaded = false; // Add a flag to track if the image is loaded
@@ -47,10 +50,13 @@
 
         this.x = x;
         this.y = y;
-        this.dx = dx;
-        this.dy = dy;
-        this.width = width;
-        this.height = height;
+        this.dx = Math.abs(dx) < MIN_SPEED ? MIN_SPEED * (dx < 0 ? -1 : 1) : dx; // Ensure minimum speed
+        this.dy = Math.abs(dy) < MIN_SPEED ? MIN_SPEED * (dy < 0 ? -1 : 1) : dy; // Ensure minimum speed
+
+        // Randomize width and height but keep them equal (e.g., 150x150, 350x350)
+        const size = Math.random() * (350 - 150) + 150;
+        this.width = size;
+        this.height = size;
       }
 
       draw() {
@@ -60,6 +66,7 @@
       }
 
       update() {
+        // Bounce logic
         if (this.x + this.width >= canvas.width || this.x <= 0) this.dx *= -1;
         if (this.y + this.height >= canvas.height || this.y <= 0) this.dy *= -1;
 
@@ -84,7 +91,7 @@
       bouncingLogos.forEach(logo => logo.update());
       requestAnimationFrame(animate);
     }
-    animate(); // Start the animation once all images are loadedimg {
+    animate(); // Start the animation once all images are loaded
   </script>
 </body>
 </html>
