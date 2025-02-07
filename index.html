@@ -108,13 +108,13 @@
     }
 
     const bouncingLogos = [];
-    logos.forEach((logo) => {
-      const x = Math.random() * (canvas.width - 150);
-      const y = Math.random() * (canvas.height - 150);
-      const dx = (Math.random() - 0.5) * 4 + MIN_SPEED;
-      const dy = (Math.random() - 0.5) * 4 + MIN_SPEED;
-      bouncingLogos.push(new Logo(logo, x, y, dx, dy));
-    });
+logos.forEach((logo) => {
+  const x = Math.random() * (canvas.width - 150 - 20) + 20; // Added margin
+  const y = Math.random() * (canvas.height - 150 - 20) + 20; // Added margin
+  const dx = (Math.random() - 0.5) * 4 + MIN_SPEED;
+  const dy = (Math.random() - 0.5) * 4 + MIN_SPEED;
+  bouncingLogos.push(new Logo(logo, x, y, dx, dy));
+});
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
