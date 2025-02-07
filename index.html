@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Logo Bouncing Screen</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sofia&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -78,7 +77,7 @@
     const MIN_SPEED = 2;
 
     class Logo {
-      constructor(imageSrc, x, y, dx, dy) {
+      constructor(imageSrc, x, y, dx, dy, size) {
         this.image = new Image();
         this.image.src = imageSrc;
         this.loaded = false;
@@ -89,7 +88,6 @@
         this.y = y;
         this.dx = Math.abs(dx) < MIN_SPEED ? MIN_SPEED * (dx < 0 ? -1 : 1) : dx;
         this.dy = Math.abs(dy) < MIN_SPEED ? MIN_SPEED * (dy < 0 ? -1 : 1) : dy;
-        const size = Math.random() * (350 - 150) + 150;
         this.width = size;
         this.height = size;
       }
@@ -99,8 +97,12 @@
         }
       }
       update() {
+        // Check for collision with the left or right walls (taking into account the width)
         if (this.x + this.width >= canvas.width || this.x <= 0) this.dx *= -1;
+        
+        // Check for collision with the top or bottom walls (taking into account the height)
         if (this.y + this.height >= canvas.height || this.y <= 0) this.dy *= -1;
+        
         this.x += this.dx;
         this.y += this.dy;
         this.draw();
@@ -108,13 +110,20 @@
     }
 
     const bouncingLogos = [];
-logos.forEach((logo) => {
-  const x = Math.random() * (canvas.width - 150 - 20) + 20; // Added margin
-  const y = Math.random() * (canvas.height - 150 - 20) + 20; // Added margin
-  const dx = (Math.random() - 0.5) * 4 + MIN_SPEED;
-  const dy = (Math.random() - 0.5) * 4 + MIN_SPEED;
-  bouncingLogos.push(new Logo(logo, x, y, dx, dy));
-});
+    logos.forEach((logo) => {
+      // Set the initial position to the center of the canvas, but keep the size of the logo intact
+      const x = canvas.width / 2 - 150 / 2; // Center the logo horizontally
+      const y = canvas.height / 2 - 150 / 2; // Center the logo vertically
+
+      // Randomize the movement direction
+      const dx = (Math.random() - 0.5) * 4 + MIN_SPEED;
+      const dy = (Math.random() - 0.5) * 4 + MIN_SPEED;
+
+      // Generate a random size between 150 and 250 for both width and height
+      const size = Math.random() * (250 - 150) + 150;
+
+      bouncingLogos.push(new Logo(logo, x, y, dx, dy, size));
+    });
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
