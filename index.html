@@ -9,25 +9,64 @@
       margin: 0;
       background-color: #121212;
       overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      position: relative;
+      font-family: "Sofia", sans-serif;
+      color: white;
+      text-align: center;
     }
     canvas {
       display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+    .welcome-container {
+      position: absolute;
+      z-index: 1;
+    }
+    input {
+      padding: 10px;
+      width: 250px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 50px;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
+  <canvas id="logoCanvas"></canvas>
+  <div class="welcome-container">
+    <h1>Welcome to ART? </h1>
+    <p>You're early, Be updated by signing up here.</p>
+    <form action="#" method="POST">
+      <input type="email" placeholder="Enter your email" required>
+      <button type="submit" id="signup-button">Subscribe</button>
+    </form>
+  </div>
   <script>
-    // Configuration
     const logos = [
       'logo1.png', 'logo2.png', 'logo3.png', 'logo4.png', 'logo5.png',
       'logo6.png', 'logo7.png', 'logo8.png', 'logo9.png', 'logo10.png'
-    ]; // Replace these with your logo file paths or URLs
+    ];
 
-    const canvas = document.createElement('canvas');
+    const canvas = document.getElementById('logoCanvas');
     document.body.appendChild(canvas);
     const ctx = canvas.getContext('2d');
 
-    // Resize canvas to fill the screen
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -35,55 +74,44 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Ensure minimum speed
-    const MIN_SPEED = 2; // Minimum speed for logos
+    const MIN_SPEED = 2;
 
     class Logo {
       constructor(imageSrc, x, y, dx, dy) {
         this.image = new Image();
         this.image.src = imageSrc;
-        this.loaded = false; // Add a flag to track if the image is loaded
-
+        this.loaded = false;
         this.image.onload = () => {
-          this.loaded = true; // Set flag to true when the image is loaded
+          this.loaded = true;
         };
-
         this.x = x;
         this.y = y;
-        this.dx = Math.abs(dx) < MIN_SPEED ? MIN_SPEED * (dx < 0 ? -1 : 1) : dx; // Ensure minimum speed
-        this.dy = Math.abs(dy) < MIN_SPEED ? MIN_SPEED * (dy < 0 ? -1 : 1) : dy; // Ensure minimum speed
-
-        // Randomize width and height but keep them equal (e.g., 150x150, 350x350)
+        this.dx = Math.abs(dx) < MIN_SPEED ? MIN_SPEED * (dx < 0 ? -1 : 1) : dx;
+        this.dy = Math.abs(dy) < MIN_SPEED ? MIN_SPEED * (dy < 0 ? -1 : 1) : dy;
         const size = Math.random() * (350 - 150) + 150;
         this.width = size;
         this.height = size;
       }
-
       draw() {
         if (this.loaded) {
           ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         }
       }
-
       update() {
-        // Bounce logic
         if (this.x + this.width >= canvas.width || this.x <= 0) this.dx *= -1;
         if (this.y + this.height >= canvas.height || this.y <= 0) this.dy *= -1;
-
         this.x += this.dx;
         this.y += this.dy;
-
         this.draw();
       }
     }
 
     const bouncingLogos = [];
-    logos.forEach((logo, index) => {
-      // Ensure that logos start fully within the screen bounds
-      const x = Math.random() * (canvas.width - 150); // Leave room for the logo size
-      const y = Math.random() * (canvas.height - 150); // Leave room for the logo size
-      const dx = (Math.random() - 0.5) * 4 + MIN_SPEED; // Speed in x-axis (with a minimum speed)
-      const dy = (Math.random() - 0.5) * 4 + MIN_SPEED; // Speed in y-axis (with a minimum speed)
+    logos.forEach((logo) => {
+      const x = Math.random() * (canvas.width - 150);
+      const y = Math.random() * (canvas.height - 150);
+      const dx = (Math.random() - 0.5) * 4 + MIN_SPEED;
+      const dy = (Math.random() - 0.5) * 4 + MIN_SPEED;
       bouncingLogos.push(new Logo(logo, x, y, dx, dy));
     });
 
@@ -92,7 +120,13 @@
       bouncingLogos.forEach(logo => logo.update());
       requestAnimationFrame(animate);
     }
-    animate(); // Start the animation once all images are loaded
+    animate();
+
+    // Random button color
+    const button = document.getElementById('signup-button');
+    const colors = ['red', 'yellow', 'blue'];
+    button.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
   </script>
 </body>
 </html>
+
