@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Game vs AI</title>
 
-    <!-- Load chess.js library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
-
-    <!-- New source for chessboard.js -->
+    <!-- UK-based CDN for chess.js and chessboard.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.0/chess.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
 
@@ -16,6 +14,9 @@
         body {
             text-align: center;
             font-family: Arial, sans-serif;
+            background-color: #062E03; /* Set to match the bouncing logos background color */
+            margin: 0;
+            padding: 0;
         }
         
         #board {
@@ -23,12 +24,14 @@
             height: 1200px; /* Set the height to 1200px */
             margin: 20px auto;
         }
+
+        h1 {
+            display: none; /* Hide the title text above the board */
+        }
     </style>
 </head>
 <body>
-    <h1>Chess Game vs AI (Level 300)</h1>
-    
-    <!-- The board element that will be replaced by the chessboard -->
+    <!-- The chessboard element -->
     <div id="board"></div>
 
     <script>
