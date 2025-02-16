@@ -54,29 +54,29 @@
             const boardElement = document.getElementById('chessboard');
 
             const initialBoard = [
-                ['br', 'bn', 'bb', 'bq', 'bk', 'bb', 'bn', 'br'],
+                ['bc', 'bn', 'bb', 'bq', 'bk', 'bb', 'bn', 'bc'],
                 ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
                 ['--', '--', '--', '--', '--', '--', '--', '--'],
                 ['--', '--', '--', '--', '--', '--', '--', '--'],
                 ['--', '--', '--', '--', '--', '--', '--', '--'],
                 ['--', '--', '--', '--', '--', '--', '--', '--'],
                 ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
-                ['wr', 'wn', 'wb', 'wq', 'wk', 'wb', 'wn', 'wr']
+                ['wc', 'wn', 'wb', 'wq', 'wk', 'wb', 'wn', 'wc']
             ];
 
             const pieceImages = {
-                'wp': 'pieces/wp.png',
-                'wn': 'pieces/wn.png',
-                'wb': 'pieces/wb.png',
-                'wq': 'pieces/wq.png',
-                'wk': 'pieces/wk.png',
-                'wr': 'pieces/wr.png',
-                'bp': 'pieces/bp.png',
-                'bn': 'pieces/bn.png',
-                'bb': 'pieces/bb.png',
-                'bq': 'pieces/bq.png',
-                'bk': 'pieces/bk.png',
-                'br': 'pieces/br.png',
+                'wp': 'pieces/wp.PNG',
+                'wn': 'pieces/wn.PNG',
+                'wb': 'pieces/wb.PNG',
+                'wq': 'pieces/wq.PNG',
+                'wk': 'pieces/wk.PNG',
+                'wc': 'pieces/wc.PNG',
+                'bp': 'pieces/bp.PNG',
+                'bn': 'pieces/bn.PNG',
+                'bb': 'pieces/bb.PNG',
+                'bq': 'pieces/bq.PNG',
+                'bk': 'pieces/bk.PNG',
+                'bc': 'pieces/bc.PNG',
                 '--': ''
             };
 
