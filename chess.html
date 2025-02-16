@@ -11,12 +11,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.js"></script>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; }
-        #board { margin: 20px auto; }
+        #board {
+            width: 400px;
+            height: 400px; /* Set both width and height to ensure the board has a square aspect ratio */
+            margin: 20px auto;
+        }
     </style>
 </head>
 <body>
     <h1>Chess Game vs AI (Level 300)</h1>
-    <div id="board" style="width: 400px"></div>
+    <div id="board"></div>
     <script>
         var board, game = new Chess();
 
