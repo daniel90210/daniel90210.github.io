@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Game vs AI</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.css">
+    <!-- First, load chess.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
+    <!-- Then, load chessboard.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.js"></script>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; }
@@ -33,9 +35,7 @@
             onDrop: function (source, target) {
                 var move = game.move({ from: source, to: target, promotion: 'q' });
                 renderMoveHistory(game.history());
-                renderMoveHistory(game.history());
                 if (move === null) return 'snapback';
-                renderMoveHistory(game.history());
                 window.setTimeout(makeRandomMove, 250);
             },
             onMouseoutSquare: square => {
@@ -50,19 +50,22 @@
         board.start();
 
         function renderMoveHistory(moves) {
-            var movesElement = $('#move-history').empty();
+            var movesElement = document.getElementById('move-history').innerHTML = '';
             moves.forEach(function (move) {
-                movesElement.append('<span>' + move + '</span>');
+                movesElement.innerHTML += '<span>' + move + '</span>';
             });
         }
 
         function greySquare(square) {
-            var squareEl = $('#board .square-' + square);
-            squareEl.css('background', '#a9a9a9');
+            var squareEl = document.querySelector('#board .square-' + square);
+            squareEl.style.backgroundColor = '#a9a9a9';
         }
 
         function removeGreySquares() {
-            $('#board .square-55d63').css('background', '');
+            var greySquares = document.querySelectorAll('.square-55d63');
+            greySquares.forEach(function(square) {
+                square.style.backgroundColor = '';
+            });
         }
     </script>
 </body>
