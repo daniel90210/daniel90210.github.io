@@ -30,13 +30,6 @@
       position: absolute;
       z-index: 1;
     }
-    input {
-      padding: 10px;
-      width: 250px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 5px;
-    }
     button {
       padding: 10px 20px;
       margin-top: 10px;
@@ -51,12 +44,9 @@
 <body>
   <canvas id="logoCanvas"></canvas>
   <div class="welcome-container">
-    <h1>Welcome to ART? </h1>
-    <p>You're early, Be updated by signing up here.</p>
-    <form action="#" method="POST">
-      <input type="email" placeholder="Enter your email" required>
-      <button type="submit" id="signup-button">Subscribe</button>
-    </form>
+    <h1>Welcome to ART?</h1>
+    <p>You're early, hit enter for a game.</p>
+    <button id="enter-button">Enter</button>
   </div>
   <script>
     const logos = [
@@ -98,10 +88,7 @@
         }
       }
       update() {
-        // Check for collision with the left or right walls (taking into account the width)
         if (this.x + this.width >= canvas.width || this.x <= 0) this.dx *= -1;
-        
-        // Check for collision with the top or bottom walls (taking into account the height)
         if (this.y + this.height >= canvas.height || this.y <= 0) this.dy *= -1;
         
         this.x += this.dx;
@@ -112,17 +99,11 @@
 
     const bouncingLogos = [];
     logos.forEach((logo) => {
-      // Set the initial position to the center of the canvas, but keep the size of the logo intact
-      const x = canvas.width / 2 - 150 / 2; // Center the logo horizontally
-      const y = canvas.height / 2 - 150 / 2; // Center the logo vertically
-
-      // Randomize the movement direction
+      const x = canvas.width / 2 - 150 / 2;
+      const y = canvas.height / 2 - 150 / 2;
       const dx = (Math.random() - 0.5) * 4 + MIN_SPEED;
       const dy = (Math.random() - 0.5) * 4 + MIN_SPEED;
-
-      // Generate a random size between 150 and 250 for both width and height
       const size = Math.random() * (250 - 150) + 150;
-
       bouncingLogos.push(new Logo(logo, x, y, dx, dy, size));
     });
 
@@ -134,10 +115,14 @@
     animate();
 
     // Random button color
-    const button = document.getElementById('signup-button');
+    const button = document.getElementById('enter-button');
     const colors = ['red', 'yellow', 'blue'];
     button.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+    // Add event listener to button (modify this to link to your chess game)
+    button.addEventListener('click', () => {
+      window.location.href = "chess-game.html"; // Change this to the actual link
+    });
   </script>
 </body>
 </html>
-
