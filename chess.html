@@ -4,26 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Game vs AI</title>
-    <!-- Load chess.js first -->
+
+    <!-- Load chess.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
-    <!-- Load chessboard.js after chess.js -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.js"></script>
+
+    <!-- New source for chessboard.js -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; }
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        
         #board {
-            width: 400px;
-            height: 400px; /* Set both width and height to ensure the board has a square aspect ratio */
+            width: 400px; /* Adjust size for the board */
+            height: 400px; /* Ensure the board has both width and height set */
             margin: 20px auto;
         }
     </style>
 </head>
 <body>
     <h1>Chess Game vs AI (Level 300)</h1>
+    
+    <!-- The board element that will be replaced by the chessboard -->
     <div id="board"></div>
+
     <script>
         var board, game = new Chess();
 
+        // Function to make a random move by the AI
         function makeRandomMove() {
             var possibleMoves = game.ugly_moves();
             if (game.game_over()) return;
@@ -32,19 +43,21 @@
             board.position(game.fen());
         }
 
+        // Configuration for chessboard.js
         var config = {
-            draggable: true,
-            dropOffBoard: 'trash',
-            sparePieces: true,
+            draggable: true,  // Enable piece dragging
+            dropOffBoard: 'trash',  // Remove pieces that are dragged off the board
+            sparePieces: true,  // Allow extra pieces
             onDrop: function (source, target) {
                 var move = game.move({ from: source, to: target, promotion: 'q' });
-                if (move === null) return 'snapback';
-                window.setTimeout(makeRandomMove, 250);
+                if (move === null) return 'snapback';  // If the move is illegal, snap back
+                window.setTimeout(makeRandomMove, 250);  // AI makes its move after a short delay
             }
         };
 
+        // Initialize the board
         board = Chessboard('board', config);
-        board.start();
+        board.start();  // Start the game with the initial setup
     </script>
 </body>
 </html>
