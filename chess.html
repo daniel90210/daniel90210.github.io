@@ -38,39 +38,13 @@
             sparePieces: true,
             onDrop: function (source, target) {
                 var move = game.move({ from: source, to: target, promotion: 'q' });
-                renderMoveHistory(game.history());
                 if (move === null) return 'snapback';
                 window.setTimeout(makeRandomMove, 250);
-            },
-            onMouseoutSquare: square => {
-                removeGreySquares();
-            },
-            onMouseoverSquare: square => {
-                greySquare(square);
             }
         };
 
         board = Chessboard('board', config);
         board.start();
-
-        function renderMoveHistory(moves) {
-            var movesElement = document.getElementById('move-history').innerHTML = '';
-            moves.forEach(function (move) {
-                movesElement.innerHTML += '<span>' + move + '</span>';
-            });
-        }
-
-        function greySquare(square) {
-            var squareEl = document.querySelector('#board .square-' + square);
-            squareEl.style.backgroundColor = '#a9a9a9';
-        }
-
-        function removeGreySquares() {
-            var greySquares = document.querySelectorAll('.square-55d63');
-            greySquares.forEach(function(square) {
-                square.style.backgroundColor = '';
-            });
-        }
     </script>
 </body>
 </html>
