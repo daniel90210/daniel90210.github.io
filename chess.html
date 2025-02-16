@@ -19,24 +19,51 @@
         var board, game = new Chess();
 
         function makeRandomMove() {
-            var possibleMoves = game.moves();
+            var possibleMoves = game.ugly_moves();
             if (game.game_over()) return;
             var randomIdx = Math.floor(Math.random() * possibleMoves.length);
-            game.move(possibleMoves[randomIdx]);
+            game.ugly_move(possibleMoves[randomIdx]);
             board.position(game.fen());
         }
 
         var config = {
             draggable: true,
-            position: 'start',
-            onDrop: function(source, target) {
+            dropOffBoard: 'trash',
+            sparePieces: true,
+            onDrop: function (source, target) {
                 var move = game.move({ from: source, to: target, promotion: 'q' });
+                renderMoveHistory(game.history());
+                renderMoveHistory(game.history());
                 if (move === null) return 'snapback';
-                setTimeout(makeRandomMove, 500);
+                renderMoveHistory(game.history());
+                window.setTimeout(makeRandomMove, 250);
+            },
+            onMouseoutSquare: square => {
+                removeGreySquares();
+            },
+            onMouseoverSquare: square => {
+                greySquare(square);
             }
         };
-        
+
         board = Chessboard('board', config);
+        board.start();
+
+        function renderMoveHistory(moves) {
+            var movesElement = $('#move-history').empty();
+            moves.forEach(function (move) {
+                movesElement.append('<span>' + move + '</span>');
+            });
+        }
+
+        function greySquare(square) {
+            var squareEl = $('#board .square-' + square);
+            squareEl.css('background', '#a9a9a9');
+        }
+
+        function removeGreySquares() {
+            $('#board .square-55d63').css('background', '');
+        }
     </script>
 </body>
 </html>
