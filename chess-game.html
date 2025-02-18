@@ -4,68 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Game</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.css"> <!-- Chessboard.js CSS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script> <!-- Chess.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #121212;
-            overflow: hidden;
-        }
-
-        .chess-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            max-width: 80vh;
-            width: 100%;
-        }
-
-        .chessboard {
-            display: grid;
-            grid-template-columns: repeat(8, min(10vw, 7vh));
-            grid-template-rows: repeat(8, min(10vw, 7vh));
-            gap: 0;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
-        }
-
-        .square {
-            width: min(10vw, 7vh);
-            height: min(10vw, 7vh);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .white {
-            background-color: #FFFED8;
-        }
-
-        .black {
-            background-color: #51B02B;
-        }
-
-        .piece {
-            width: 90%;
-            height: 90%;
-            background-size: cover;
-            background-position: center;
-        }
+        /* Your existing styles... */
     </style>
 </head>
 <body>
     <div class="chess-container">
         <div id="chessboard" class="chessboard"></div>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
+            const board = Chessboard(boardElement);
+            const game = new Chess(); // This is from chess.js, it handles the game logic
 
+            // Initial board setup
             const initialBoard = [
                 ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
                 ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
@@ -93,35 +49,83 @@
                 '--': ''
             };
 
-            // Chessboard.js setup
-            const board = Chessboard('chessboard', {
-                draggable: true,
-                dropOffBoard: 'trash',
-                sparePieces: true,
-                pieceTheme: function (piece) {
-                    return pieceImages[piece] || ''; // Use the custom piece image
+            // Function to create the board
+            function createBoard() {
+                boardElement.innerHTML = '';
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const square = document.createElement('div');
+                        const piece = initialBoard[row][col];
+                        square.classList.add('square');
+                        square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
+
+                        if (piece !== '--') {
+                            const img = document.createElement('img');
+                            img.src = pieceImages[piece];
+                            img.alt = piece;
+                            img.classList.add('piece');
+                            square.appendChild(img);
+                        }
+
+                        boardElement.appendChild(square);
+                    }
                 }
-            });
-
-            // Initialize Chess.js for game logic
-            const game = new Chess();
-
-            // Function for simple AI move (random)
-            function makeRandomMove() {
-                const moves = game.legalMoves();
-                const randomMove = moves[Math.floor(Math.random() * moves.length)];
-                game.uci(randomMove);  // Make the move
-                board.position(game.fen());  // Update the board
             }
 
-            // Set up the board with the initial position
-            board.position(game.fen());
+            // Function for AI to make a move
+            function aiMove() {
+                const moves = game.legalMoves();
+                const randomMove = moves[Math.floor(Math.random() * moves.length)];
+                game.uglyMove(randomMove);
+                renderMoveHistory(game.history());
+                renderBoard();
+            }
 
-            // Make a move by AI after every human move
-            board.on('drop', function (source, target) {
-                game.uci(source + target);  // Apply the human move
-                makeRandomMove();  // AI move
+            // Function to render the board
+            function renderBoard() {
+                const board = game.board();
+                const squares = document.querySelectorAll('.square');
+                let squareIndex = 0;
+
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const square = squares[squareIndex];
+                        const piece = board[row][col];
+
+                        if (piece === null) {
+                            square.innerHTML = '';
+                        } else {
+                            const img = document.createElement('img');
+                            img.src = pieceImages[piece.color + piece.type];
+                            img.alt = piece.color + piece.type;
+                            img.classList.add('piece');
+                            square.appendChild(img);
+                        }
+
+                        squareIndex++;
+                    }
+                }
+            }
+
+            // Function to render move history
+            function renderMoveHistory(moves) {
+                console.log('Move History: ', moves);
+            }
+
+            // Event listener to handle human moves
+            boardElement.addEventListener('click', function (event) {
+                // Add your logic to handle player's move
+                if (game.game_over()) {
+                    alert('Game Over');
+                    return;
+                }
+                aiMove();
             });
+
+            // Initialize game and start the AI move
+            createBoard();
+            renderBoard();
+            aiMove(); // Start the game with an AI move
         });
     </script>
 </body>
