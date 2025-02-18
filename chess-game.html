@@ -42,14 +42,10 @@
 
         .white {
             background-color: #FFFED8;
-           background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
-                      linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
-    }
+        }
 
         .black {
             background-color: #51B02B;
-            background-image: radial-gradient(rgba(81, 176, 43, 0.5) 10%, transparent 70%),
-                      linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
         }
 
         .piece {
@@ -110,14 +106,16 @@
 
             // Create the board
             function createBoard() {
-                boardElement.innerHTML = '';
+                boardElement.innerHTML = ''; // Clear the board
+
+                // Create the squares and pieces
                 for (let row = 0; row < 8; row++) {
                     for (let col = 0; col < 8; col++) {
                         const square = document.createElement('div');
-                        const piece = initialBoard[row][col];
                         square.classList.add('square');
                         square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
 
+                        const piece = initialBoard[row][col];
                         if (piece !== '--') {
                             const img = document.createElement('img');
                             img.src = pieceImages[piece];
@@ -136,14 +134,20 @@
                 const board = chess.board();
                 boardElement.innerHTML = '';
                 createBoard();
-                for (let i = 0; i < 64; i++) {
-                    const square = boardElement.children[i];
-                    const piece = board[Math.floor(i / 8)][i % 8];
-                    if (piece) {
-                        const img = document.createElement('img');
-                        img.src = pieceImages[piece.color + piece.type];
-                        img.classList.add('piece');
-                        square.appendChild(img);
+
+                // Render the pieces
+                let index = 0;
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const square = boardElement.children[index];
+                        const piece = board[row][col];
+                        if (piece) {
+                            const img = document.createElement('img');
+                            img.src = pieceImages[piece.color + piece.type];
+                            img.classList.add('piece');
+                            square.appendChild(img);
+                        }
+                        index++;
                     }
                 }
             }
