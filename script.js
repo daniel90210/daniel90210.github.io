@@ -39,3 +39,22 @@ function handleAIMove(move) {
 
     // Allow the user to make their next move
 }
+function makeUserMove(from, to) {
+    // Similar to how AI moves are handled, update the board with the user's move
+    // Then send the updated position to Stockfish to get its response
+    const fromRow = 8 - parseInt(from[1]);
+    const fromCol = from.charCodeAt(0) - 'a'.charCodeAt(0);
+    const toRow = 8 - parseInt(to[1]);
+    const toCol = to.charCodeAt(0) - 'a'.charCodeAt(0);
+
+    initialBoard[toRow][toCol] = initialBoard[fromRow][fromCol];
+    initialBoard[fromRow][fromCol] = '--';
+
+    // Update the UI
+    createBoard();
+
+    // Send the new board position to Stockfish
+    let fen = generateFEN();
+    sendToStockfish(`position fen ${fen}`);
+    sendToStockfish('go movetime 1000');
+}
