@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://stockfishchess.org/files/stockfish.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Game</title>
@@ -43,17 +42,17 @@
 
         .white {
             background-color: #FFFED8;
-           background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
+            background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
                       linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
-    background-blend-mode: overlay;
-}
+            background-blend-mode: overlay;
+        }
 
-.black {
-    background-color: #51B02B;
-    background-image: radial-gradient(rgba(81, 176, 43, 0.5) 10%, transparent 70%),
+        .black {
+            background-color: #51B02B;
+            background-image: radial-gradient(rgba(81, 176, 43, 0.5) 10%, transparent 70%),
                       linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
-    background-blend-mode: overlay;
-}
+            background-blend-mode: overlay;
+        }
 
         .piece {
             width: 90%;
@@ -67,6 +66,7 @@
     <div class="chess-container">
         <div id="chessboard" class="chessboard"></div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stockfish/11.0.0/stockfish.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
@@ -98,6 +98,42 @@
                 '--': ''
             };
 
+            function generateFEN() {
+                let fen = '';
+                
+                // Convert board state to FEN
+                for (let row = 0; row < 8; row++) {
+                    let emptyCount = 0;
+                    for (let col = 0; col < 8; col++) {
+                        const piece = initialBoard[row][col];
+
+                        if (piece === '--') {
+                            emptyCount++;
+                        } else {
+                            if (emptyCount > 0) {
+                                fen += emptyCount;  // Add the number of empty squares
+                                emptyCount = 0;
+                            }
+                            fen += piece;  // Add the piece (e.g., 'wp', 'bq', etc.)
+                        }
+                    }
+
+                    // If there were empty squares at the end of the rank, add the number
+                    if (emptyCount > 0) {
+                        fen += emptyCount;
+                    }
+
+                    if (row < 7) {
+                        fen += '/';  // Separate ranks with '/'
+                    }
+                }
+
+                // Add additional FEN information (turn, castling rights, en passant, half-move clock, full-move number)
+                fen += ' w KQkq - 0 1';  // Example for the starting position
+
+                return fen;
+            }
+
             function createBoard() {
                 boardElement.innerHTML = '';
                 for (let row = 0; row < 8; row++) {
@@ -120,7 +156,26 @@
                 }
             }
 
+            // Generate FEN string and log it
+            const fen = generateFEN();
+            console.log("Current FEN: ", fen);
+
+            // Create the chessboard display
             createBoard();
+
+            // Initialize Stockfish
+            const stockfish = Stockfish();
+            stockfish.postMessage('uci');  // Initialize Stockfish
+            stockfish.postMessage('position fen ' + fen);  // Set the board position
+
+            // Example: Stockfish moves after a set amount of time
+            stockfish.postMessage('go depth 1');  // Ask Stockfish to make a move
+            stockfish.onmessage = function(event) {
+                if (event.data.includes('bestmove')) {
+                    const move = event.data.split(' ')[1];
+                    console.log("Stockfish's move:", move);
+                }
+            };
         });
     </script>
 </body>
