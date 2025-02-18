@@ -147,9 +147,11 @@
                         movePiece(selectedPiece.row, selectedPiece.col, row, col);
                         changeTurn();
                         selectedPiece = null;
+                        possibleMoves = [];
                         clearMarkers();
                     } else {
                         selectedPiece = null;
+                        possibleMoves = [];
                         clearMarkers();
                     }
                 }
