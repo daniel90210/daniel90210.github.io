@@ -4,12 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Game</title>
-    <!-- Add the chess.js library with type="module" -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js" type="module"></script>
-    <!-- Add the chessboard.js library (without type="module") -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.js"></script>
     <style>
-        /* Your existing styles... */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #121212;
+            overflow: hidden;
+        }
+
+        .chess-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-width: 80vh;
+            width: 100%;
+        }
+
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, min(10vw, 7vh));
+            grid-template-rows: repeat(8, min(10vw, 7vh));
+            gap: 0;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .square {
+            width: min(10vw, 7vh);
+            height: min(10vw, 7vh);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .white {
+            background-color: #FFFED8;
+        }
+
+        .black {
+            background-color: #51B02B;
+        }
+
+        .piece {
+            width: 90%;
+            height: 90%;
+            background-size: cover;
+            background-position: center;
+        }
     </style>
 </head>
 <body>
@@ -20,9 +67,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
-            const game = new Chess(); // This is from chess.js, it handles the game logic
 
-            // Define the initial board state
             const initialBoard = [
                 ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
                 ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
@@ -50,61 +95,31 @@
                 '--': ''
             };
 
-            // Initialize chessboard.js and render the board
-            const board = Chessboard(boardElement, {
-                draggable: true,  // Makes pieces draggable
-                dropOffBoard: 'trash',  // Allows pieces to be dropped off the board
-                sparePieces: true,  // Allows spare pieces to be available for drag and drop
-                position: 'start'  // Start the board in the initial position
-            });
+            const game = new Chess();
 
-            // Function to render the board
-            function renderBoard() {
-                const board = game.board();
-                const squares = document.querySelectorAll('.square');
-                let squareIndex = 0;
-
+            function createBoard() {
+                boardElement.innerHTML = '';
                 for (let row = 0; row < 8; row++) {
                     for (let col = 0; col < 8; col++) {
-                        const square = squares[squareIndex];
-                        const piece = board[row][col];
+                        const square = document.createElement('div');
+                        const piece = initialBoard[row][col];
+                        square.classList.add('square');
+                        square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
 
-                        if (piece === null) {
-                            square.innerHTML = '';
-                        } else {
+                        if (piece !== '--') {
                             const img = document.createElement('img');
-                            img.src = pieceImages[piece.color + piece.type];
-                            img.alt = piece.color + piece.type;
+                            img.src = pieceImages[piece];
+                            img.alt = piece;
                             img.classList.add('piece');
                             square.appendChild(img);
                         }
 
-                        squareIndex++;
+                        boardElement.appendChild(square);
                     }
                 }
             }
 
-            // Function for AI to make a move
-            function aiMove() {
-                const moves = game.legalMoves();
-                const randomMove = moves[Math.floor(Math.random() * moves.length)];
-                game.uglyMove(randomMove);
-                renderBoard();
-            }
-
-            // Event listener to handle human moves
-            boardElement.addEventListener('click', function (event) {
-                if (game.game_over()) {
-                    alert('Game Over');
-                    return;
-                }
-                aiMove(); // Make AI move after the player
-            });
-
-            // Start the game and make the first AI move
-            renderBoard();
-            aiMove(); // Start with an AI move
+            createBoard(); // Load the initial chessboard state
         });
     </script>
 </body>
-</html>
