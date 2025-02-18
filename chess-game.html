@@ -42,11 +42,17 @@
 
         .white {
             background-color: #FFFED8;
-        }
+           background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
+                      linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
+    background-blend-mode: overlay;
+}
 
         .black {
             background-color: #7A0000;
-        }
+        background-image: radial-gradient(rgba(120, 0, 0, 0.5) 10%, transparent 70%),
+                      linear-gradient(45deg, rgba(50, 0, 0, 0.2) 25%, transparent 25%);
+    background-blend-mode: overlay;
+}
 
         .piece {
             width: 90%;
