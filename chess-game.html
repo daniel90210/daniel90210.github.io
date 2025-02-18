@@ -162,7 +162,7 @@
                         // Move piece if it's a valid move
                         const selectedPiece = initialBoard[selectedSquare.row][selectedSquare.col];
                         const legalMove = isLegalMove(selectedPiece, selectedSquare.row, selectedSquare.col, row, col);
-                        
+
                         if (legalMove) {
                             // Valid move, make the move
                             initialBoard[selectedSquare.row][selectedSquare.col] = '--';
