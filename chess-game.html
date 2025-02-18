@@ -212,7 +212,8 @@
                         return false;
                     case 'wq':
                     case 'bq': // Queen
-                        if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol) || startRow === endRow || startCol === endCol) return true; // Diagonal or straight move
+                        if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol)) return true; // Diagonal move
+                        if (startRow === endRow || startCol === endCol) return true; // Horizontal or vertical move
                         return false;
                     case 'wk':
                     case 'bk': // King
