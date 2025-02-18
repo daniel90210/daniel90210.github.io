@@ -20,7 +20,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            max-width: 80vh; /* Ensures it doesn't get too large */
+            max-width: 80vh;
             width: 100%;
         }
 
@@ -29,7 +29,7 @@
             grid-template-columns: repeat(8, min(10vw, 7vh));
             grid-template-rows: repeat(8, min(10vw, 7vh));
             gap: 0;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1); /* Soft shadow instead of border */
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
         }
 
         .square {
@@ -45,14 +45,14 @@
         .white {
             background-color: #FFFED8;
             background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
-                      linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
+                              linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
             background-blend-mode: overlay;
         }
 
         .black {
             background-color: #51B02B;
             background-image: radial-gradient(rgba(81, 176, 43, 0.5) 10%, transparent 70%),
-                      linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
+                              linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
             background-blend-mode: overlay;
         }
 
@@ -96,8 +96,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
-            let selectedSquare = null; // Track the selected piece
-            let turn = 'white'; // Track whose turn it is ('white' or 'black')
+            let selectedSquare = null; 
+            let turn = 'white'; 
             const turnIndicator = document.getElementById('turn-indicator');
 
             let initialBoard = [
@@ -138,7 +138,6 @@
                         square.dataset.row = row;
                         square.dataset.col = col;
 
-                        // Add piece to square if present
                         if (piece !== '--') {
                             const img = document.createElement('img');
                             img.src = pieceImages[piece];
@@ -147,7 +146,6 @@
                             square.appendChild(img);
                         }
 
-                        // Add click event for square
                         square.addEventListener('click', function () {
                             handleSquareClick(square);
                         });
@@ -158,61 +156,66 @@
             }
 
             function handleSquareClick(square) {
-                const row = square.dataset.row;
-                const col = square.dataset.col;
-
+                const row = parseInt(square.dataset.row);
+                const col = parseInt(square.dataset.col);
                 const piece = initialBoard[row][col];
                 const isWhiteTurn = turn === 'white';
                 const isBlackTurn = turn === 'black';
 
-                // Check if the piece belongs to the player whose turn it is
                 if ((isWhiteTurn && piece.startsWith('w')) || (isBlackTurn && piece.startsWith('b'))) {
                     if (selectedSquare === null) {
-                        // Select piece if it belongs to the current player
-                        selectedSquare = { row, col }; // Store the selected piece
-                        square.style.border = '2px solid #FFFBF0'; // Highlight the selected piece
-                        showLegalMoves(piece, row, col); // Show possible moves for selected piece
+                        selectedSquare = { row, col };
+                        square.style.border = '2px solid #FFFBF0';
+                        showLegalMoves(piece, row, col);
                     } else {
-                        // Move piece if it's a valid move
                         const selectedPiece = initialBoard[selectedSquare.row][selectedSquare.col];
-                        const legalMove = isLegalMove(selectedPiece, selectedSquare.row, selectedSquare.col, row, col);
-
-                        if (legalMove) {
-                            // Valid move, make the move
+                        if (isLegalMove(selectedPiece, selectedSquare.row, selectedSquare.col, row, col)) {
                             initialBoard[selectedSquare.row][selectedSquare.col] = '--';
                             initialBoard[row][col] = selectedPiece;
-
-                            // Remove border from old square and update the board
                             document.querySelectorAll('.square').forEach(sq => sq.style.border = '');
                             createBoard();
-
-                            // Switch turns after move
                             turn = turn === 'white' ? 'black' : 'white';
                             turnIndicator.textContent = turn === 'white' ? "White's Turn" : "Black's Turn";
                         } else {
                             alert("Illegal move!");
                         }
-
-                        selectedSquare = null; // Deselect piece after move
-                        clearMarkers(); // Clear the markers
+                        selectedSquare = null;
+                        clearMarkers();
                     }
                 } else {
                     alert(`It's ${turn}'s turn!`);
-                    clearMarkers(); // Clear the markers if the wrong player's piece is clicked
+                    clearMarkers();
                 }
             }
 
-            // Function to check if the move is legal for each piece
             function isLegalMove(piece, startRow, startCol, endRow, endCol) {
-                // Add your logic for each piece's movement here
-                // Example for pawns, knights, etc.
-                return true; // Simplified for this example
+                // Validate moves for each piece type (simplified)
+                if (piece === 'wp') {
+                    // White Pawn - Moves up, captures diagonally
+                    if (startCol === endCol && startRow - endRow === 1 && initialBoard[endRow][endCol] === '--') {
+                        return true; // Normal move
+                    }
+                    if (Math.abs(startCol - endCol) === 1 && startRow - endRow === 1 && initialBoard[endRow][endCol].startsWith('b')) {
+                        return true; // Capture
+                    }
+                }
+                if (piece === 'bp') {
+                    // Black Pawn - Moves down, captures diagonally
+                    if (startCol === endCol && endRow - startRow === 1 && initialBoard[endRow][endCol] === '--') {
+                        return true; // Normal move
+                    }
+                    if (Math.abs(startCol - endCol) === 1 && endRow - startRow === 1 && initialBoard[endRow][endCol].startsWith('w')) {
+                        return true; // Capture
+                    }
+                }
+                // Add more logic for other pieces (Rooks, Knights, Bishops, etc.)
+                return false;
             }
 
-            // Show legal move markers (question marks) on the board
             function showLegalMoves(piece, row, col) {
-                const possibleMoves = getPossibleMoves(piece, row, col);
-                possibleMoves.forEach(move => {
+                // Example of showing legal moves for a piece
+                const moves = getPossibleMoves(piece, row, col);
+                moves.forEach(move => {
                     const square = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
                     const marker = document.createElement('div');
                     marker.classList.add('marker');
@@ -220,17 +223,26 @@
                 });
             }
 
-            // Get possible moves for a selected piece (dummy example)
             function getPossibleMoves(piece, row, col) {
-                let moves = [];
-                // Example logic: add simple moves (change with real movement rules)
+                const moves = [];
                 if (piece === 'wp') {
-                    moves = [{ row: row - 1, col: col }];
+                    // White Pawn: Move one square up
+                    if (row > 0 && initialBoard[row - 1][col] === '--') {
+                        moves.push({ row: row - 1, col });
+                    }
+                    // White Pawn: Capture diagonally
+                    if (row > 0 && col > 0 && initialBoard[row - 1][col - 1].startsWith('b')) {
+                        moves.push({ row: row - 1, col: col - 1 });
+                    }
+                    if (row > 0 && col < 7 && initialBoard[row - 1][col + 1].startsWith('b')) {
+                        moves.push({ row: row - 1, col: col + 1 });
+                    }
                 }
+                // Add more logic for other pieces (Rooks, Knights, etc.)
                 return moves;
             }
 
-            // Clear all legal move markers
+            // Clear move markers
             function clearMarkers() {
                 const markers = document.querySelectorAll('.marker');
                 markers.forEach(marker => marker.remove());
