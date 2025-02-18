@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://stockfishchess.org/files/stockfish.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Game</title>
@@ -20,7 +21,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            max-width: 80vh;
+            max-width: 80vh; /* Ensures it doesn't get too large */
             width: 100%;
         }
 
@@ -29,7 +30,7 @@
             grid-template-columns: repeat(8, min(10vw, 7vh));
             grid-template-rows: repeat(8, min(10vw, 7vh));
             gap: 0;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1); /* Soft shadow instead of border */
         }
 
         .square {
@@ -38,30 +39,27 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
-            border: 1px solid #ccc;
         }
 
         .white {
             background-color: #FFFED8;
-        }
+           background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
+                      linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
+    background-blend-mode: overlay;
+}
 
-        .black {
-            background-color: #51B02B;
-        }
+.black {
+    background-color: #51B02B;
+    background-image: radial-gradient(rgba(81, 176, 43, 0.5) 10%, transparent 70%),
+                      linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
+    background-blend-mode: overlay;
+}
 
         .piece {
-            width: 80%;
-            height: 80%;
+            width: 90%;
+            height: 90%;
             background-size: cover;
             background-position: center;
-        }
-
-        .marker {
-            width: 20%;
-            height: 20%;
-            background-color: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
         }
     </style>
 </head>
@@ -72,6 +70,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
+
             const initialBoard = [
                 ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
                 ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
@@ -99,10 +98,6 @@
                 '--': ''
             };
 
-            let currentTurn = 'white';  // White's turn to start
-            let selectedPiece = null;
-            let possibleMoves = [];
-
             function createBoard() {
                 boardElement.innerHTML = '';
                 for (let row = 0; row < 8; row++) {
@@ -111,8 +106,6 @@
                         const piece = initialBoard[row][col];
                         square.classList.add('square');
                         square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
-                        square.dataset.row = row;
-                        square.dataset.col = col;
 
                         if (piece !== '--') {
                             const img = document.createElement('img');
@@ -122,83 +115,9 @@
                             square.appendChild(img);
                         }
 
-                        square.addEventListener('click', () => onSquareClick(row, col));
-
                         boardElement.appendChild(square);
                     }
                 }
-            }
-
-            function onSquareClick(row, col) {
-                const piece = initialBoard[row][col];
-
-                if (selectedPiece === null) {
-                    if ((currentTurn === 'white' && piece[0] === 'w') || (currentTurn === 'black' && piece[0] === 'b')) {
-                        selectedPiece = { row, col, piece };
-                        possibleMoves = getPossibleMoves(piece, row, col);
-                        highlightLegalMoves(possibleMoves);
-                    }
-                } else {
-                    if (possibleMoves.some(move => move.row === row && move.col === col)) {
-                        movePiece(selectedPiece.row, selectedPiece.col, row, col);
-                        changeTurn();
-                        selectedPiece = null;
-                        possibleMoves = [];
-                        clearMarkers();
-                    } else {
-                        selectedPiece = null;
-                        possibleMoves = [];
-                        clearMarkers();
-                    }
-                }
-            }
-
-            function getPossibleMoves(piece, row, col) {
-                const possibleMoves = [];
-                const directions = {
-                    'wp': [[-1, 0], [-2, 0]], // White pawn moves up
-                    'bp': [[1, 0], [2, 0]],   // Black pawn moves down
-                    'wkn': [[-2, -1], [-2, 1], [2, -1], [2, 1], [1, -2], [1, 2], [-1, -2], [-1, 2]],  // Knight moves
-                    'bb': [[-1, -1], [-1, 1], [1, -1], [1, 1]], // Bishop moves diagonally
-                    'wc': [[0, 1], [0, -1], [1, 0], [-1, 0]], // Rook moves vertically and horizontally
-                    'wq': [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1]], // Queen moves in all directions
-                    'wk': [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1]] // King moves one square
-                };
-
-                // Add piece-specific movement here for each piece
-                if (piece === 'wp' || piece === 'bp') {
-                    const direction = piece === 'wp' ? -1 : 1;
-                    if (initialBoard[row + direction] && initialBoard[row + direction][col] === '--') {
-                        possibleMoves.push({ row: row + direction, col });
-                    }
-                }
-
-                return possibleMoves;
-            }
-
-            function highlightLegalMoves(moves) {
-                moves.forEach(move => {
-                    const square = document.querySelector(`.square[data-row="${move.row}"][data-col="${move.col}"]`);
-                    const marker = document.createElement('div');
-                    marker.classList.add('marker');
-                    square.appendChild(marker);
-                });
-            }
-
-            function clearMarkers() {
-                document.querySelectorAll('.marker').forEach(marker => marker.remove());
-            }
-
-            function movePiece(fromRow, fromCol, toRow, toCol) {
-                const piece = initialBoard[fromRow][fromCol];
-                initialBoard[toRow][toCol] = piece;
-                initialBoard[fromRow][fromCol] = '--';
-                createBoard();  // Redraw the board with the updated state
-            }
-
-            function changeTurn() {
-                currentTurn = currentTurn === 'white' ? 'black' : 'white';
-                console.log(`It's ${currentTurn}'s turn!`);
             }
 
             createBoard();
