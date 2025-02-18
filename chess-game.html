@@ -187,7 +187,7 @@
                 const piece = initialBoard[fromRow][fromCol];
                 initialBoard[toRow][toCol] = piece;
                 initialBoard[fromRow][fromCol] = '--';
-                createBoard();
+                createBoard();  // Redraw the board with the updated state
             }
 
             function changeTurn() {
