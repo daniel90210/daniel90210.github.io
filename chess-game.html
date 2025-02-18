@@ -20,7 +20,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            max-width: 80vh; /* Ensures it doesn't get too large */
+            max-width: 80vh;
             width: 100%;
         }
 
@@ -29,7 +29,7 @@
             grid-template-columns: repeat(8, min(10vw, 7vh));
             grid-template-rows: repeat(8, min(10vw, 7vh));
             gap: 0;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1); /* Soft shadow instead of border */
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
         }
 
         .square {
@@ -38,6 +38,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
         }
 
         .white {
@@ -59,6 +60,11 @@
             height: 90%;
             background-size: cover;
             background-position: center;
+            cursor: pointer;
+        }
+
+        .selected {
+            border: 2px solid #FFFBF0;
         }
     </style>
 </head>
@@ -70,6 +76,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
+            let selectedPiece = null;
+            let selectedPiecePosition = null;
 
             const initialBoard = [
                 ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
@@ -101,7 +109,6 @@
             function generateFEN() {
                 let fen = '';
                 
-                // Convert board state to FEN
                 for (let row = 0; row < 8; row++) {
                     let emptyCount = 0;
                     for (let col = 0; col < 8; col++) {
@@ -111,26 +118,23 @@
                             emptyCount++;
                         } else {
                             if (emptyCount > 0) {
-                                fen += emptyCount;  // Add the number of empty squares
+                                fen += emptyCount;
                                 emptyCount = 0;
                             }
-                            fen += piece;  // Add the piece (e.g., 'wp', 'bq', etc.)
+                            fen += piece;
                         }
                     }
 
-                    // If there were empty squares at the end of the rank, add the number
                     if (emptyCount > 0) {
                         fen += emptyCount;
                     }
 
                     if (row < 7) {
-                        fen += '/';  // Separate ranks with '/'
+                        fen += '/';
                     }
                 }
 
-                // Add additional FEN information (turn, castling rights, en passant, half-move clock, full-move number)
-                fen += ' w KQkq - 0 1';  // Example for the starting position
-
+                fen += ' w KQkq - 0 1';
                 return fen;
             }
 
@@ -148,6 +152,32 @@
                             img.src = pieceImages[piece];
                             img.alt = piece;
                             img.classList.add('piece');
+                            img.setAttribute('data-row', row);
+                            img.setAttribute('data-col', col);
+
+                            img.addEventListener('click', () => {
+                                if (selectedPiece === img) {
+                                    // Deselect piece if clicked again
+                                    img.classList.remove('selected');
+                                    selectedPiece = null;
+                                    selectedPiecePosition = null;
+                                } else {
+                                    if (selectedPiece) {
+                                        // Move the selected piece to the new square
+                                        const targetRow = row;
+                                        const targetCol = col;
+                                        initialBoard[targetRow][targetCol] = selectedPiece.alt;
+                                        initialBoard[selectedPiecePosition.row][selectedPiecePosition.col] = '--';
+                                        createBoard();
+                                    }
+
+                                    // Select new piece
+                                    selectedPiece = img;
+                                    selectedPiecePosition = { row, col };
+                                    img.classList.add('selected');
+                                }
+                            });
+
                             square.appendChild(img);
                         }
 
@@ -156,26 +186,7 @@
                 }
             }
 
-            // Generate FEN string and log it
-            const fen = generateFEN();
-            console.log("Current FEN: ", fen);
-
-            // Create the chessboard display
             createBoard();
-
-            // Initialize Stockfish
-            const stockfish = Stockfish();
-            stockfish.postMessage('uci');  // Initialize Stockfish
-            stockfish.postMessage('position fen ' + fen);  // Set the board position
-
-            // Example: Stockfish moves after a set amount of time
-            stockfish.postMessage('go depth 1');  // Ask Stockfish to make a move
-            stockfish.onmessage = function(event) {
-                if (event.data.includes('bestmove')) {
-                    const move = event.data.split(' ')[1];
-                    console.log("Stockfish's move:", move);
-                }
-            };
         });
     </script>
 </body>
