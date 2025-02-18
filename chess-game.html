@@ -96,8 +96,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
-            let selectedSquare = null; 
-            let turn = 'white'; 
+            let selectedSquare = null;
+            let turn = 'white'; // White starts first
             const turnIndicator = document.getElementById('turn-indicator');
 
             let initialBoard = [
@@ -159,21 +159,23 @@
                 const row = parseInt(square.dataset.row);
                 const col = parseInt(square.dataset.col);
                 const piece = initialBoard[row][col];
-                const isWhiteTurn = turn === 'white';
-                const isBlackTurn = turn === 'black';
 
-                if ((isWhiteTurn && piece.startsWith('w')) || (isBlackTurn && piece.startsWith('b'))) {
+                // Check if the piece belongs to the current player
+                if (turn === 'white' && piece.startsWith('w') || turn === 'black' && piece.startsWith('b')) {
                     if (selectedSquare === null) {
                         selectedSquare = { row, col };
-                        square.style.border = '2px solid #FFFBF0';
+                        square.style.border = '2px solid #FFFBF0'; // Highlight selected piece
                         showLegalMoves(piece, row, col);
                     } else {
                         const selectedPiece = initialBoard[selectedSquare.row][selectedSquare.col];
                         if (isLegalMove(selectedPiece, selectedSquare.row, selectedSquare.col, row, col)) {
                             initialBoard[selectedSquare.row][selectedSquare.col] = '--';
                             initialBoard[row][col] = selectedPiece;
-                            document.querySelectorAll('.square').forEach(sq => sq.style.border = '');
-                            createBoard();
+
+                            document.querySelectorAll('.square').forEach(sq => sq.style.border = ''); // Remove borders
+                            createBoard(); // Recreate the board
+
+                            // Switch turn
                             turn = turn === 'white' ? 'black' : 'white';
                             turnIndicator.textContent = turn === 'white' ? "White's Turn" : "Black's Turn";
                         } else {
@@ -189,31 +191,123 @@
             }
 
             function isLegalMove(piece, startRow, startCol, endRow, endCol) {
-                // Validate moves for each piece type (simplified)
+                const directionRow = endRow - startRow;
+                const directionCol = endCol - startCol;
+
+                // Pawns
                 if (piece === 'wp') {
-                    // White Pawn - Moves up, captures diagonally
                     if (startCol === endCol && startRow - endRow === 1 && initialBoard[endRow][endCol] === '--') {
-                        return true; // Normal move
+                        return true; // White Pawn normal move
                     }
                     if (Math.abs(startCol - endCol) === 1 && startRow - endRow === 1 && initialBoard[endRow][endCol].startsWith('b')) {
-                        return true; // Capture
+                        return true; // White Pawn capture
                     }
                 }
                 if (piece === 'bp') {
-                    // Black Pawn - Moves down, captures diagonally
                     if (startCol === endCol && endRow - startRow === 1 && initialBoard[endRow][endCol] === '--') {
-                        return true; // Normal move
+                        return true; // Black Pawn normal move
                     }
                     if (Math.abs(startCol - endCol) === 1 && endRow - startRow === 1 && initialBoard[endRow][endCol].startsWith('w')) {
-                        return true; // Capture
+                        return true; // Black Pawn capture
                     }
                 }
-                // Add more logic for other pieces (Rooks, Knights, Bishops, etc.)
-                return false;
+
+                // Rooks
+                if (piece === 'wr' || piece === 'br') {
+                    if (startRow === endRow) {
+                        // Horizontal move
+                        const step = directionCol > 0 ? 1 : -1;
+                        for (let i = startCol + step; i !== endCol; i += step) {
+                            if (initialBoard[startRow][i] !== '--') {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                    if (startCol === endCol) {
+                        // Vertical move
+                        const step = directionRow > 0 ? 1 : -1;
+                        for (let i = startRow + step; i !== endRow; i += step) {
+                            if (initialBoard[i][startCol] !== '--') {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                }
+
+                // Knights
+                if (piece === 'wkn' || piece === 'bkn') {
+                    const absRow = Math.abs(directionRow);
+                    const absCol = Math.abs(directionCol);
+                    return (absRow === 2 && absCol === 1) || (absRow === 1 && absCol === 2);
+                }
+
+                // Bishops
+                if (piece === 'wb' || piece === 'bb') {
+                    if (Math.abs(directionRow) === Math.abs(directionCol)) {
+                        const stepRow = directionRow > 0 ? 1 : -1;
+                        const stepCol = directionCol > 0 ? 1 : -1;
+                        let r = startRow + stepRow;
+                        let c = startCol + stepCol;
+                        while (r !== endRow && c !== endCol) {
+                            if (initialBoard[r][c] !== '--') {
+                                return false;
+                            }
+                            r += stepRow;
+                            c += stepCol;
+                        }
+                        return true;
+                    }
+                }
+
+                // Queens
+                if (piece === 'wq' || piece === 'bq') {
+                    if (startRow === endRow || startCol === endCol) {
+                        // Rook-like move (vertical/horizontal)
+                        const stepRow = directionRow > 0 ? 1 : -1;
+                        const stepCol = directionCol > 0 ? 1 : -1;
+                        if (startRow === endRow) {
+                            for (let i = startCol + stepCol; i !== endCol; i += stepCol) {
+                                if (initialBoard[startRow][i] !== '--') {
+                                    return false;
+                                }
+                            }
+                        } else {
+                            for (let i = startRow + stepRow; i !== endRow; i += stepRow) {
+                                if (initialBoard[i][startCol] !== '--') {
+                                    return false;
+                                }
+                            }
+                        }
+                        return true;
+                    }
+                    if (Math.abs(directionRow) === Math.abs(directionCol)) {
+                        // Bishop-like move (diagonal)
+                        const stepRow = directionRow > 0 ? 1 : -1;
+                        const stepCol = directionCol > 0 ? 1 : -1;
+                        let r = startRow + stepRow;
+                        let c = startCol + stepCol;
+                        while (r !== endRow && c !== endCol) {
+                            if (initialBoard[r][c] !== '--') {
+                                return false;
+                            }
+                            r += stepRow;
+                            c += stepCol;
+                        }
+                        return true;
+                    }
+                }
+
+                // Kings
+                if (piece === 'wk' || piece === 'bk') {
+                    return Math.abs(directionRow) <= 1 && Math.abs(directionCol) <= 1;
+                }
+
+                return false; // No valid move
             }
 
             function showLegalMoves(piece, row, col) {
-                // Example of showing legal moves for a piece
                 const moves = getPossibleMoves(piece, row, col);
                 moves.forEach(move => {
                     const square = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
@@ -224,31 +318,16 @@
             }
 
             function getPossibleMoves(piece, row, col) {
-                const moves = [];
-                if (piece === 'wp') {
-                    // White Pawn: Move one square up
-                    if (row > 0 && initialBoard[row - 1][col] === '--') {
-                        moves.push({ row: row - 1, col });
-                    }
-                    // White Pawn: Capture diagonally
-                    if (row > 0 && col > 0 && initialBoard[row - 1][col - 1].startsWith('b')) {
-                        moves.push({ row: row - 1, col: col - 1 });
-                    }
-                    if (row > 0 && col < 7 && initialBoard[row - 1][col + 1].startsWith('b')) {
-                        moves.push({ row: row - 1, col: col + 1 });
-                    }
-                }
-                // Add more logic for other pieces (Rooks, Knights, etc.)
-                return moves;
+                const possibleMoves = [];
+                // Define moves based on piece type here
+                return possibleMoves;
             }
 
-            // Clear move markers
             function clearMarkers() {
-                const markers = document.querySelectorAll('.marker');
-                markers.forEach(marker => marker.remove());
+                document.querySelectorAll('.marker').forEach(marker => marker.remove());
             }
 
-            createBoard(); // Initialize the board
+            createBoard();
         });
     </script>
 </body>
