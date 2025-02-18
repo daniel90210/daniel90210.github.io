@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Game</title>
+    <title>Chess Game with Stockfish AI</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -38,15 +38,20 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
         }
 
         .white {
             background-color: #FFFED8;
+            background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
+                      linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
+            background-blend-mode: overlay;
         }
 
         .black {
             background-color: #51B02B;
+            background-image: radial-gradient(rgba(81, 176, 43, 0.5) 10%, transparent 70%),
+                      linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
+            background-blend-mode: overlay;
         }
 
         .piece {
@@ -54,11 +59,13 @@
             height: 90%;
             background-size: cover;
             background-position: center;
-            cursor: pointer;
         }
 
-        .highlight {
-            background-color: rgba(255, 0, 0, 0.4);
+        #status {
+            color: white;
+            font-size: 20px;
+            margin-top: 20px;
+            text-align: center;
         }
     </style>
 </head>
@@ -66,12 +73,13 @@
     <div class="chess-container">
         <div id="chessboard" class="chessboard"></div>
     </div>
-
+    <div id="status"></div>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stockfish/11.0.0/stockfish.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
-
+            const statusElement = document.getElementById('status');
             const initialBoard = [
                 ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
                 ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
@@ -100,7 +108,14 @@
             };
 
             let selectedPiece = null;
-            let validMoves = [];
+            let selectedRow = null;
+            let selectedCol = null;
+            let isWhiteTurn = true; // White goes first
+
+            // Initialize Stockfish AI
+            const stockfish = Stockfish();
+            stockfish.postMessage('uci');
+            stockfish.postMessage('position startpos');
 
             function generateFEN() {
                 let fen = '';
@@ -108,7 +123,6 @@
                     let emptyCount = 0;
                     for (let col = 0; col < 8; col++) {
                         const piece = initialBoard[row][col];
-
                         if (piece === '--') {
                             emptyCount++;
                         } else {
@@ -119,16 +133,14 @@
                             fen += piece;
                         }
                     }
-
                     if (emptyCount > 0) {
                         fen += emptyCount;
                     }
-
                     if (row < 7) {
                         fen += '/';
                     }
                 }
-                fen += ' w KQkq - 0 1';  // Example for the starting position
+                fen += ' ' + (isWhiteTurn ? 'w' : 'b') + ' KQkq - 0 1'; // Turn and game state details
                 return fen;
             }
 
@@ -146,156 +158,123 @@
                             img.src = pieceImages[piece];
                             img.alt = piece;
                             img.classList.add('piece');
-                            img.dataset.row = row;
-                            img.dataset.col = col;
-                            img.addEventListener('click', selectPiece);
                             square.appendChild(img);
                         }
+
+                        square.addEventListener('click', function () {
+                            handleSquareClick(row, col);
+                        });
 
                         boardElement.appendChild(square);
                     }
                 }
             }
 
-            function selectPiece(event) {
-                const img = event.target;
-                const row = parseInt(img.dataset.row);
-                const col = parseInt(img.dataset.col);
-                const piece = initialBoard[row][col];
-
+            function handleSquareClick(row, col) {
                 if (selectedPiece) {
-                    movePiece(row, col);
-                } else {
-                    highlightValidMoves(row, col);
+                    if (isValidMove(selectedPiece, selectedRow, selectedCol, row, col)) {
+                        makeMove(selectedRow, selectedCol, row, col);
+                        createBoard();
+                        if (isWhiteTurn) {
+                            statusElement.textContent = 'White Turn';
+                        } else {
+                            statusElement.textContent = 'Black Turn';
+                        }
+
+                        isWhiteTurn = !isWhiteTurn;
+                        selectedPiece = null;
+                        selectedRow = null;
+                        selectedCol = null;
+
+                        if (!isWhiteTurn) {
+                            stockfish.postMessage('position fen ' + generateFEN());
+                            stockfish.postMessage('go depth 10');
+                        }
+                    } else {
+                        selectedPiece = null;
+                        selectedRow = null;
+                        selectedCol = null;
+                    }
+                } else if (initialBoard[row][col] !== '--' && isWhiteTurn && initialBoard[row][col].charAt(0) === 'w') {
+                    selectedPiece = initialBoard[row][col];
+                    selectedRow = row;
+                    selectedCol = col;
                 }
             }
 
-            function highlightValidMoves(row, col) {
-                // Clear previous highlights
-                validMoves = [];
-                const piece = initialBoard[row][col];
+            function isValidMove(piece, startRow, startCol, endRow, endCol) {
+                const pieceType = piece.slice(1); 
+                const color = piece.charAt(0); 
+                const rowDiff = Math.abs(endRow - startRow);
+                const colDiff = Math.abs(endCol - startCol);
 
-                if (piece === '--') return; // Don't allow selection of empty squares
-
-                // Get valid moves for the piece
-                validMoves = getValidMoves(row, col, piece);
-
-                // Highlight valid moves
-                validMoves.forEach(move => {
-                    const square = boardElement.children[move.row * 8 + move.col];
-                    square.classList.add('highlight');
-                });
-                selectedPiece = { row, col };
-            }
-
-            function getValidMoves(row, col, piece) {
-                const moves = [];
-                switch (piece[1]) {
-                    case 'p':  // Pawn
-                        const direction = piece[0] === 'w' ? -1 : 1;
-                        if (initialBoard[row + direction] && initialBoard[row + direction][col] === '--') {
-                            moves.push({ row: row + direction, col });
+                switch (pieceType) {
+                    case 'p': 
+                        if (color === 'w') {
+                            if (startCol === endCol && rowDiff === 1 && initialBoard[endRow][endCol] === '--') return true;
+                            if (startCol === endCol && rowDiff === 2 && startRow === 6 && initialBoard[endRow][endCol] === '--') return true;
+                        } else if (color === 'b') {
+                            if (startCol === endCol && rowDiff === 1 && initialBoard[endRow][endCol] === '--') return true;
+                            if (startCol === endCol && rowDiff === 2 && startRow === 1 && initialBoard[endRow][endCol] === '--') return true;
                         }
                         break;
-                    case 'r':  // Rook
-                        moves.push(...getStraightLineMoves(row, col));
+                    case 'r': 
+                        if (rowDiff === 0 || colDiff === 0) return !isBlocked(startRow, startCol, endRow, endCol);
                         break;
-                    case 'n':  // Knight
-                        moves.push(...getKnightMoves(row, col));
+                    case 'n': 
+                        if ((rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2)) return true;
                         break;
-                    case 'b':  // Bishop
-                        moves.push(...getDiagonalMoves(row, col));
+                    case 'b': 
+                        if (rowDiff === colDiff) return !isBlocked(startRow, startCol, endRow, endCol);
                         break;
-                    case 'q':  // Queen
-                        moves.push(...getStraightLineMoves(row, col));
-                        moves.push(...getDiagonalMoves(row, col));
+                    case 'q': 
+                        if (rowDiff === colDiff || rowDiff === 0 || colDiff === 0) return !isBlocked(startRow, startCol, endRow, endCol);
                         break;
-                    case 'k':  // King
-                        moves.push(...getKingMoves(row, col));
+                    case 'k': 
+                        if (rowDiff <= 1 && colDiff <= 1) return true;
                         break;
                 }
-                return moves;
+                return false;
             }
 
-            function getStraightLineMoves(row, col) {
-                const directions = [
-                    { r: 1, c: 0 }, { r: -1, c: 0 }, { r: 0, c: 1 }, { r: 0, c: -1 }
-                ];
-                return directions.flatMap(d => {
-                    const moves = [];
-                    let r = row + d.r;
-                    let c = col + d.c;
-                    while (r >= 0 && r < 8 && c >= 0 && c < 8) {
-                        if (initialBoard[r][c] === '--') {
-                            moves.push({ row: r, col: c });
-                        } else {
-                            break;
-                        }
-                        r += d.r;
-                        c += d.c;
-                    }
-                    return moves;
-                });
+            function isBlocked(startRow, startCol, endRow, endCol) {
+                const rowDir = endRow > startRow ? 1 : endRow < startRow ? -1 : 0;
+                const colDir = endCol > startCol ? 1 : endCol < startCol ? -1 : 0;
+
+                let row = startRow + rowDir;
+                let col = startCol + colDir;
+
+                while (row !== endRow || col !== endCol) {
+                    if (initialBoard[row][col] !== '--') return true; 
+                    row += rowDir;
+                    col += colDir;
+                }
+                return false;
             }
 
-            function getDiagonalMoves(row, col) {
-                const directions = [
-                    { r: 1, c: 1 }, { r: 1, c: -1 }, { r: -1, c: 1 }, { r: -1, c: -1 }
-                ];
-                return directions.flatMap(d => {
-                    const moves = [];
-                    let r = row + d.r;
-                    let c = col + d.c;
-                    while (r >= 0 && r < 8 && c >= 0 && c < 8) {
-                        if (initialBoard[r][c] === '--') {
-                            moves.push({ row: r, col: c });
-                        } else {
-                            break;
-                        }
-                        r += d.r;
-                        c += d.c;
-                    }
-                    return moves;
-                });
+            function makeMove(startRow, startCol, endRow, endCol) {
+                initialBoard[endRow][endCol] = initialBoard[startRow][startCol];
+                initialBoard[startRow][startCol] = '--';
             }
 
-            function getKnightMoves(row, col) {
-                const knightMoves = [
-                    { r: 2, c: 1 }, { r: 2, c: -1 }, { r: -2, c: 1 }, { r: -2, c: -1 },
-                    { r: 1, c: 2 }, { r: 1, c: -2 }, { r: -1, c: 2 }, { r: -1, c: -2 }
-                ];
-                return knightMoves.map(d => ({ row: row + d.r, col: col + d.c }))
-                    .filter(move => move.row >= 0 && move.row < 8 && move.col >= 0 && move.col < 8);
-            }
-
-            function getKingMoves(row, col) {
-                const kingMoves = [
-                    { r: 1, c: 0 }, { r: -1, c: 0 }, { r: 0, c: 1 }, { r: 0, c: -1 },
-                    { r: 1, c: 1 }, { r: 1, c: -1 }, { r: -1, c: 1 }, { r: -1, c: -1 }
-                ];
-                return kingMoves.map(d => ({ row: row + d.r, col: col + d.c }))
-                    .filter(move => move.row >= 0 && move.row < 8 && move.col >= 0 && move.col < 8);
-            }
-
-            function movePiece(row, col) {
-                const { row: fromRow, col: fromCol } = selectedPiece;
-                const piece = initialBoard[fromRow][fromCol];
-
-                if (validMoves.some(move => move.row === row && move.col === col)) {
-                    initialBoard[row][col] = piece;
-                    initialBoard[fromRow][fromCol] = '--';
-
-                    createBoard();  // Recreate the board
-                    selectedPiece = null;
-                    validMoves = [];
-                } else {
-                    selectedPiece = null;
-                    validMoves = [];
+            stockfish.onmessage = function(event) {
+                if (event.data.includes("bestmove")) {
+                    const move = event.data.split(' ')[1];
+                    const from = move.substring(0, 2);
+                    const to = move.substring(2, 4);
+                    const fromRow = 8 - parseInt(from[1]);
+                    const fromCol = from.charCodeAt(0) - 97;
+                    const toRow = 8 - parseInt(to[1]);
+                    const toCol = to.charCodeAt(0) - 97;
+                    makeMove(fromRow, fromCol, toRow, toCol);
                     createBoard();
+                    isWhiteTurn = true;
+                    statusElement.textContent = 'White Turn';
                 }
-            }
+            };
 
-            createBoard(); // Initial board render
+            createBoard();
+            statusElement.textContent = 'White Turn';
         });
     </script>
 </body>
