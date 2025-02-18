@@ -13,19 +13,25 @@
             height: 100vh;
             margin: 0;
             background-color: #121212;
+            overflow: hidden;
+        }
+
+        .chess-container {
+            max-width: 80vh; /* Prevents chessboard from getting too large */
+            width: 100%;
         }
 
         .chessboard {
             display: grid;
-            grid-template-columns: repeat(8, 10vw);
-            grid-template-rows: repeat(8, 10vw);
+            grid-template-columns: repeat(8, min(10vw, 7vh)); 
+            grid-template-rows: repeat(8, min(10vw, 7vh));  
             gap: 0;
             border: 2px solid #333;
         }
 
         .square {
-            width: 10vw;
-            height: 10vw;
+            width: min(10vw, 7vh);
+            height: min(10vw, 7vh);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -48,7 +54,9 @@
     </style>
 </head>
 <body>
-    <div id="chessboard" class="chessboard"></div>
+    <div class="chess-container">
+        <div id="chessboard" class="chessboard"></div>
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
