@@ -61,9 +61,22 @@
             background-size: cover;
             background-position: center;
         }
+
+        .turn-indicator {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: #FFFED8;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
+    <div class="turn-indicator" id="turn-indicator">White's Turn</div>
     <div class="chess-container">
         <div id="chessboard" class="chessboard"></div>
     </div>
@@ -71,6 +84,9 @@
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
             let selectedSquare = null; // Track the selected piece
+            let turn = 'white'; // Track whose turn it is ('white' or 'black')
+            const turnIndicator = document.getElementById('turn-indicator');
+
             let initialBoard = [
                 ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
                 ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
@@ -133,31 +149,40 @@
                 const col = square.dataset.col;
 
                 const piece = initialBoard[row][col];
+                const isWhiteTurn = turn === 'white';
+                const isBlackTurn = turn === 'black';
 
-                if (selectedSquare === null) {
-                    // Select piece
-                    if (piece !== '--') {
+                // Check if the piece belongs to the player whose turn it is
+                if ((isWhiteTurn && piece.startsWith('w')) || (isBlackTurn && piece.startsWith('b'))) {
+                    if (selectedSquare === null) {
+                        // Select piece if it belongs to the current player
                         selectedSquare = { row, col }; // Store the selected piece
                         square.style.border = '2px solid #FFFBF0'; // Highlight the selected piece
+                    } else {
+                        // Move piece if it's a valid move
+                        const selectedPiece = initialBoard[selectedSquare.row][selectedSquare.col];
+                        const legalMove = isLegalMove(selectedPiece, selectedSquare.row, selectedSquare.col, row, col);
+                        
+                        if (legalMove) {
+                            // Valid move, make the move
+                            initialBoard[selectedSquare.row][selectedSquare.col] = '--';
+                            initialBoard[row][col] = selectedPiece;
+
+                            // Remove border from old square and update the board
+                            document.querySelectorAll('.square').forEach(sq => sq.style.border = '');
+                            createBoard();
+
+                            // Switch turns after move
+                            turn = turn === 'white' ? 'black' : 'white';
+                            turnIndicator.textContent = turn === 'white' ? "White's Turn" : "Black's Turn";
+                        } else {
+                            alert("Illegal move!");
+                        }
+
+                        selectedSquare = null; // Deselect piece after move
                     }
                 } else {
-                    // Move piece
-                    const selectedPiece = initialBoard[selectedSquare.row][selectedSquare.col];
-                    const legalMove = isLegalMove(selectedPiece, selectedSquare.row, selectedSquare.col, row, col);
-                    
-                    if (legalMove) {
-                        // Valid move, make the move
-                        initialBoard[selectedSquare.row][selectedSquare.col] = '--';
-                        initialBoard[row][col] = selectedPiece;
-
-                        // Remove border from old square and update the board
-                        document.querySelectorAll('.square').forEach(sq => sq.style.border = '');
-                        createBoard();
-                    } else {
-                        alert("Illegal move!");
-                    }
-
-                    selectedSquare = null; // Deselect piece after move
+                    alert(`It's ${turn}'s turn!`);
                 }
             }
 
@@ -187,17 +212,17 @@
                         return false;
                     case 'wq':
                     case 'bq': // Queen
-                        if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol) || startRow === endRow || startCol === endCol) return true; // Diagonal, horizontal, or vertical
+                        if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol) || startRow === endRow || startCol === endCol) return true; // Diagonal or straight move
                         return false;
                     case 'wk':
                     case 'bk': // King
-                        return Math.abs(startRow - endRow) <= 1 && Math.abs(startCol - endCol) <= 1; // One square in any direction
+                        return Math.abs(startRow - endRow) <= 1 && Math.abs(startCol - endCol) <= 1; // Move one square in any direction
                     default:
                         return false;
                 }
             }
 
-            createBoard();
+            createBoard(); // Initialize the board
         });
     </script>
 </body>
