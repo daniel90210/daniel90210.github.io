@@ -20,7 +20,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            max-width: 80vh;
+            max-width: 80vh; /* Ensures it doesn't get too large */
             width: 100%;
         }
 
@@ -29,7 +29,7 @@
             grid-template-columns: repeat(8, min(10vw, 7vh));
             grid-template-rows: repeat(8, min(10vw, 7vh));
             gap: 0;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1); /* Soft shadow instead of border */
         }
 
         .square {
@@ -38,21 +38,20 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
             position: relative;
         }
 
         .white {
             background-color: #FFFED8;
             background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
-                              linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
+                      linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
             background-blend-mode: overlay;
         }
 
         .black {
             background-color: #51B02B;
             background-image: radial-gradient(rgba(81, 176, 43, 0.5) 10%, transparent 70%),
-                              linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
+                      linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
             background-blend-mode: overlay;
         }
 
@@ -63,44 +62,23 @@
             background-position: center;
         }
 
-        .turn-indicator {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            color: #FFFED8;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 5px;
-        }
-
         .marker {
-            width: 20px;
-            height: 20px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-image: url('https://img.icons8.com/ios/452/question-mark.png');
-            background-size: contain;
-            background-repeat: no-repeat;
+            width: 20%;
+            height: 20%;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
         }
     </style>
 </head>
 <body>
-    <div class="turn-indicator" id="turn-indicator">White's Turn</div>
     <div class="chess-container">
         <div id="chessboard" class="chessboard"></div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
-            let selectedSquare = null;
-            let turn = 'white'; // White starts first
-            const turnIndicator = document.getElementById('turn-indicator');
 
-            let initialBoard = [
+            const initialBoard = [
                 ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
                 ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
                 ['--', '--', '--', '--', '--', '--', '--', '--'],
@@ -127,6 +105,8 @@
                 '--': ''
             };
 
+            let currentTurn = 'white';  // Initialize turn to white
+
             function createBoard() {
                 boardElement.innerHTML = '';
                 for (let row = 0; row < 8; row++) {
@@ -135,8 +115,6 @@
                         const piece = initialBoard[row][col];
                         square.classList.add('square');
                         square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
-                        square.dataset.row = row;
-                        square.dataset.col = col;
 
                         if (piece !== '--') {
                             const img = document.createElement('img');
@@ -144,187 +122,75 @@
                             img.alt = piece;
                             img.classList.add('piece');
                             square.appendChild(img);
+                            square.addEventListener('click', () => onSquareClick(row, col));
                         }
-
-                        square.addEventListener('click', function () {
-                            handleSquareClick(square);
-                        });
 
                         boardElement.appendChild(square);
                     }
                 }
             }
 
-            function handleSquareClick(square) {
-                const row = parseInt(square.dataset.row);
-                const col = parseInt(square.dataset.col);
+            let selectedPiece = null;
+            let possibleMoves = [];
+
+            function onSquareClick(row, col) {
                 const piece = initialBoard[row][col];
 
-                // Check if the piece belongs to the current player
-                if (turn === 'white' && piece.startsWith('w') || turn === 'black' && piece.startsWith('b')) {
-                    if (selectedSquare === null) {
-                        selectedSquare = { row, col };
-                        square.style.border = '2px solid #FFFBF0'; // Highlight selected piece
-                        showLegalMoves(piece, row, col);
-                    } else {
-                        const selectedPiece = initialBoard[selectedSquare.row][selectedSquare.col];
-                        if (isLegalMove(selectedPiece, selectedSquare.row, selectedSquare.col, row, col)) {
-                            initialBoard[selectedSquare.row][selectedSquare.col] = '--';
-                            initialBoard[row][col] = selectedPiece;
-
-                            document.querySelectorAll('.square').forEach(sq => sq.style.border = ''); // Remove borders
-                            createBoard(); // Recreate the board
-
-                            // Switch turn
-                            turn = turn === 'white' ? 'black' : 'white';
-                            turnIndicator.textContent = turn === 'white' ? "White's Turn" : "Black's Turn";
-                        } else {
-                            alert("Illegal move!");
-                        }
-                        selectedSquare = null;
-                        clearMarkers();
+                if (selectedPiece === null) {
+                    if ((currentTurn === 'white' && piece[0] === 'w') || (currentTurn === 'black' && piece[0] === 'b')) {
+                        selectedPiece = { row, col, piece };
+                        possibleMoves = getPossibleMoves(piece, row, col);
+                        showLegalMoves(possibleMoves);
                     }
                 } else {
-                    alert(`It's ${turn}'s turn!`);
-                    clearMarkers();
+                    if (possibleMoves.some(move => move.row === row && move.col === col)) {
+                        movePiece(selectedPiece.row, selectedPiece.col, row, col);
+                        changeTurn();
+                        selectedPiece = null;
+                        clearMarkers();
+                    } else {
+                        selectedPiece = null;
+                        clearMarkers();
+                    }
                 }
             }
 
-            function isLegalMove(piece, startRow, startCol, endRow, endCol) {
-                const directionRow = endRow - startRow;
-                const directionCol = endCol - startCol;
-
-                // Pawns
-                if (piece === 'wp') {
-                    if (startCol === endCol && startRow - endRow === 1 && initialBoard[endRow][endCol] === '--') {
-                        return true; // White Pawn normal move
-                    }
-                    if (Math.abs(startCol - endCol) === 1 && startRow - endRow === 1 && initialBoard[endRow][endCol].startsWith('b')) {
-                        return true; // White Pawn capture
+            function getPossibleMoves(piece, row, col) {
+                const possibleMoves = [];
+                // Add logic for each piece's movement (this is simplified, feel free to extend)
+                if (piece === 'wp' || piece === 'bp') {
+                    const direction = piece[0] === 'w' ? -1 : 1;
+                    if (initialBoard[row + direction] && initialBoard[row + direction][col] === '--') {
+                        possibleMoves.push({ row: row + direction, col });
                     }
                 }
-                if (piece === 'bp') {
-                    if (startCol === endCol && endRow - startRow === 1 && initialBoard[endRow][endCol] === '--') {
-                        return true; // Black Pawn normal move
-                    }
-                    if (Math.abs(startCol - endCol) === 1 && endRow - startRow === 1 && initialBoard[endRow][endCol].startsWith('w')) {
-                        return true; // Black Pawn capture
-                    }
-                }
-
-                // Rooks
-                if (piece === 'wr' || piece === 'br') {
-                    if (startRow === endRow) {
-                        // Horizontal move
-                        const step = directionCol > 0 ? 1 : -1;
-                        for (let i = startCol + step; i !== endCol; i += step) {
-                            if (initialBoard[startRow][i] !== '--') {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-                    if (startCol === endCol) {
-                        // Vertical move
-                        const step = directionRow > 0 ? 1 : -1;
-                        for (let i = startRow + step; i !== endRow; i += step) {
-                            if (initialBoard[i][startCol] !== '--') {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-                }
-
-                // Knights
-                if (piece === 'wkn' || piece === 'bkn') {
-                    const absRow = Math.abs(directionRow);
-                    const absCol = Math.abs(directionCol);
-                    return (absRow === 2 && absCol === 1) || (absRow === 1 && absCol === 2);
-                }
-
-                // Bishops
-                if (piece === 'wb' || piece === 'bb') {
-                    if (Math.abs(directionRow) === Math.abs(directionCol)) {
-                        const stepRow = directionRow > 0 ? 1 : -1;
-                        const stepCol = directionCol > 0 ? 1 : -1;
-                        let r = startRow + stepRow;
-                        let c = startCol + stepCol;
-                        while (r !== endRow && c !== endCol) {
-                            if (initialBoard[r][c] !== '--') {
-                                return false;
-                            }
-                            r += stepRow;
-                            c += stepCol;
-                        }
-                        return true;
-                    }
-                }
-
-                // Queens
-                if (piece === 'wq' || piece === 'bq') {
-                    if (startRow === endRow || startCol === endCol) {
-                        // Rook-like move (vertical/horizontal)
-                        const stepRow = directionRow > 0 ? 1 : -1;
-                        const stepCol = directionCol > 0 ? 1 : -1;
-                        if (startRow === endRow) {
-                            for (let i = startCol + stepCol; i !== endCol; i += stepCol) {
-                                if (initialBoard[startRow][i] !== '--') {
-                                    return false;
-                                }
-                            }
-                        } else {
-                            for (let i = startRow + stepRow; i !== endRow; i += stepRow) {
-                                if (initialBoard[i][startCol] !== '--') {
-                                    return false;
-                                }
-                            }
-                        }
-                        return true;
-                    }
-                    if (Math.abs(directionRow) === Math.abs(directionCol)) {
-                        // Bishop-like move (diagonal)
-                        const stepRow = directionRow > 0 ? 1 : -1;
-                        const stepCol = directionCol > 0 ? 1 : -1;
-                        let r = startRow + stepRow;
-                        let c = startCol + stepCol;
-                        while (r !== endRow && c !== endCol) {
-                            if (initialBoard[r][c] !== '--') {
-                                return false;
-                            }
-                            r += stepRow;
-                            c += stepCol;
-                        }
-                        return true;
-                    }
-                }
-
-                // Kings
-                if (piece === 'wk' || piece === 'bk') {
-                    return Math.abs(directionRow) <= 1 && Math.abs(directionCol) <= 1;
-                }
-
-                return false; // No valid move
+                // Additional movement logic for other pieces...
+                return possibleMoves;
             }
 
-            function showLegalMoves(piece, row, col) {
-                const moves = getPossibleMoves(piece, row, col);
+            function showLegalMoves(moves) {
                 moves.forEach(move => {
-                    const square = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
+                    const square = document.querySelector(`.square:nth-child(${move.row * 8 + move.col + 1})`);
                     const marker = document.createElement('div');
                     marker.classList.add('marker');
                     square.appendChild(marker);
                 });
             }
 
-            function getPossibleMoves(piece, row, col) {
-                const possibleMoves = [];
-                // Define moves based on piece type here
-                return possibleMoves;
-            }
-
             function clearMarkers() {
                 document.querySelectorAll('.marker').forEach(marker => marker.remove());
+            }
+
+            function movePiece(fromRow, fromCol, toRow, toCol) {
+                const piece = initialBoard[fromRow][fromCol];
+                initialBoard[toRow][toCol] = piece;
+                initialBoard[fromRow][fromCol] = '--';
+                createBoard();
+            }
+
+            function changeTurn() {
+                currentTurn = currentTurn === 'white' ? 'black' : 'white';
+                console.log(`It's ${currentTurn}'s turn!`);
             }
 
             createBoard();
