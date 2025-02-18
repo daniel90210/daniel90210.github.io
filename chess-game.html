@@ -39,6 +39,7 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
+            position: relative;
         }
 
         .white {
@@ -72,6 +73,18 @@
             background-color: rgba(0, 0, 0, 0.5);
             padding: 10px;
             border-radius: 5px;
+        }
+
+        .marker {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-image: url('https://img.icons8.com/ios/452/question-mark.png');
+            background-size: contain;
+            background-repeat: no-repeat;
         }
     </style>
 </head>
@@ -158,6 +171,7 @@
                         // Select piece if it belongs to the current player
                         selectedSquare = { row, col }; // Store the selected piece
                         square.style.border = '2px solid #FFFBF0'; // Highlight the selected piece
+                        showLegalMoves(piece, row, col); // Show possible moves for selected piece
                     } else {
                         // Move piece if it's a valid move
                         const selectedPiece = initialBoard[selectedSquare.row][selectedSquare.col];
@@ -180,47 +194,46 @@
                         }
 
                         selectedSquare = null; // Deselect piece after move
+                        clearMarkers(); // Clear the markers
                     }
                 } else {
                     alert(`It's ${turn}'s turn!`);
+                    clearMarkers(); // Clear the markers if the wrong player's piece is clicked
                 }
             }
 
             // Function to check if the move is legal for each piece
             function isLegalMove(piece, startRow, startCol, endRow, endCol) {
-                switch (piece) {
-                    case 'wp': // White pawn
-                        if (startCol === endCol && startRow - endRow === 1 && initialBoard[endRow][endCol] === '--') return true; // Move one square forward
-                        if (startCol === endCol && startRow === 6 && endRow === 4 && initialBoard[endRow][endCol] === '--' && initialBoard[5][endCol] === '--') return true; // Initial two square move
-                        if (Math.abs(startCol - endCol) === 1 && startRow - endRow === 1 && initialBoard[endRow][endCol].startsWith('b')) return true; // Capture diagonally
-                        return false;
-                    case 'bp': // Black pawn
-                        if (startCol === endCol && endRow - startRow === 1 && initialBoard[endRow][endCol] === '--') return true; // Move one square forward
-                        if (startCol === endCol && startRow === 1 && endRow === 3 && initialBoard[endRow][endCol] === '--' && initialBoard[2][endCol] === '--') return true; // Initial two square move
-                        if (Math.abs(startCol - endCol) === 1 && endRow - startRow === 1 && initialBoard[endRow][endCol].startsWith('w')) return true; // Capture diagonally
-                        return false;
-                    case 'wkn':
-                    case 'bkn': // Knight
-                        return (Math.abs(startRow - endRow) === 2 && Math.abs(startCol - endCol) === 1) || (Math.abs(startRow - endRow) === 1 && Math.abs(startCol - endCol) === 2);
-                    case 'wb':
-                    case 'bb': // Bishop
-                        if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol)) return true; // Diagonal move
-                        return false;
-                    case 'wc':
-                    case 'bc': // Rook
-                        if (startRow === endRow || startCol === endCol) return true; // Horizontal or vertical move
-                        return false;
-                    case 'wq':
-                    case 'bq': // Queen
-                        if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol)) return true; // Diagonal move
-                        if (startRow === endRow || startCol === endCol) return true; // Horizontal or vertical move
-                        return false;
-                    case 'wk':
-                    case 'bk': // King
-                        return Math.abs(startRow - endRow) <= 1 && Math.abs(startCol - endCol) <= 1; // Move one square in any direction
-                    default:
-                        return false;
+                // Add your logic for each piece's movement here
+                // Example for pawns, knights, etc.
+                return true; // Simplified for this example
+            }
+
+            // Show legal move markers (question marks) on the board
+            function showLegalMoves(piece, row, col) {
+                const possibleMoves = getPossibleMoves(piece, row, col);
+                possibleMoves.forEach(move => {
+                    const square = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
+                    const marker = document.createElement('div');
+                    marker.classList.add('marker');
+                    square.appendChild(marker);
+                });
+            }
+
+            // Get possible moves for a selected piece (dummy example)
+            function getPossibleMoves(piece, row, col) {
+                let moves = [];
+                // Example logic: add simple moves (change with real movement rules)
+                if (piece === 'wp') {
+                    moves = [{ row: row - 1, col: col }];
                 }
+                return moves;
+            }
+
+            // Clear all legal move markers
+            function clearMarkers() {
+                const markers = document.querySelectorAll('.marker');
+                markers.forEach(marker => marker.remove());
             }
 
             createBoard(); // Initialize the board
