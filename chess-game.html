@@ -4,46 +4,155 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Game</title>
-    
-    <!-- Link to chess.js JS (Chess logic) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
-    
-    <!-- Link to chessboard.js CSS (for UI layout) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.css">
-    
-    <!-- Link to chessboard.js JS (for handling the board UI) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #121212;
+            overflow: hidden;
+        }
+
+        .chess-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-width: 80vh; /* Ensures it doesn't get too large */
+            width: 100%;
+        }
+
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, min(10vw, 7vh));
+            grid-template-rows: repeat(8, min(10vw, 7vh));
+            gap: 0;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1); /* Soft shadow instead of border */
+        }
+
+        .square {
+            width: min(10vw, 7vh);
+            height: min(10vw, 7vh);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .white {
+            background-color: #FFFED8;
+            background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
+                      linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
+            background-blend-mode: overlay;
+        }
+
+        .black {
+            background-color: #51B02B;
+            background-image: radial-gradient(rgba(81, 176, 43, 0.5) 10%, transparent 70%),
+                      linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
+            background-blend-mode: overlay;
+        }
+
+        .piece {
+            width: 90%;
+            height: 90%;
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
 </head>
 <body>
     <div class="chess-container">
         <div id="chessboard" class="chessboard"></div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Initialize the chess game logic
-            const game = new Chess();
+            const boardElement = document.getElementById('chessboard');
+            let selectedSquare = null; // Track the selected piece
+            let initialBoard = [
+                ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
+                ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
+                ['--', '--', '--', '--', '--', '--', '--', '--'],
+                ['--', '--', '--', '--', '--', '--', '--', '--'],
+                ['--', '--', '--', '--', '--', '--', '--', '--'],
+                ['--', '--', '--', '--', '--', '--', '--', '--'],
+                ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
+                ['wc', 'wkn', 'wb', 'wq', 'wk', 'wb', 'wkn', 'wc']
+            ];
 
-            // Initialize chessboard with custom settings
-            const board = ChessBoard('chessboard', {
-                draggable: true,
-                dropOffBoard: 'trash',
-                sparePieces: true,
-                onDrop: handleMove,  // Handle piece drops
-                position: 'start',   // Set the initial position
-            });
+            const pieceImages = {
+                'wp': 'pieces/wp.PNG',
+                'wkn': 'pieces/wkn.PNG',
+                'wb': 'pieces/wb.PNG',
+                'wq': 'pieces/wq.PNG',
+                'wk': 'pieces/wk.PNG',
+                'wc': 'pieces/wc.PNG',
+                'bp': 'pieces/bp.PNG',
+                'bkn': 'pieces/bkn.PNG',
+                'bb': 'pieces/bb.PNG',
+                'bq': 'pieces/bq.PNG',
+                'bk': 'pieces/bk.PNG',
+                'bc': 'pieces/bc.PNG',
+                '--': ''
+            };
 
-            // Function to handle a move
-            function handleMove(from, to) {
-                const move = game.move({ from, to });  // Make the move using chess.js
-                renderMoveHistory(game.history());     // Update move history
-                board.position(game.fen());           // Update board display
+            function createBoard() {
+                boardElement.innerHTML = '';
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const square = document.createElement('div');
+                        const piece = initialBoard[row][col];
+                        square.classList.add('square');
+                        square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
+                        square.dataset.row = row;
+                        square.dataset.col = col;
+
+                        // Add piece to square if present
+                        if (piece !== '--') {
+                            const img = document.createElement('img');
+                            img.src = pieceImages[piece];
+                            img.alt = piece;
+                            img.classList.add('piece');
+                            square.appendChild(img);
+                        }
+
+                        // Add click event for square
+                        square.addEventListener('click', function () {
+                            handleSquareClick(square);
+                        });
+
+                        boardElement.appendChild(square);
+                    }
+                }
             }
 
-            // Function to render the move history
-            function renderMoveHistory(moves) {
-                console.log('Move history: ' + moves.join(', '));
+            function handleSquareClick(square) {
+                const row = square.dataset.row;
+                const col = square.dataset.col;
+
+                if (selectedSquare === null) {
+                    // Select piece
+                    const piece = initialBoard[row][col];
+                    if (piece !== '--') {
+                        selectedSquare = { row, col }; // Store the selected piece
+                        square.style.border = '2px solid #FFFBF0'; // Highlight the selected piece
+                    }
+                } else {
+                    // Move piece
+                    const selectedPiece = initialBoard[selectedSquare.row][selectedSquare.col];
+                    initialBoard[selectedSquare.row][selectedSquare.col] = '--';
+                    initialBoard[row][col] = selectedPiece;
+
+                    // Remove border from old square and update the board
+                    document.querySelectorAll('.square').forEach(sq => sq.style.border = '');
+                    createBoard();
+                    selectedSquare = null; // Deselect piece after move
+                }
             }
+
+            createBoard();
         });
     </script>
 </body>
