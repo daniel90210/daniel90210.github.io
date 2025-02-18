@@ -132,9 +132,10 @@
                 const row = square.dataset.row;
                 const col = square.dataset.col;
 
+                const piece = initialBoard[row][col];
+
                 if (selectedSquare === null) {
                     // Select piece
-                    const piece = initialBoard[row][col];
                     if (piece !== '--') {
                         selectedSquare = { row, col }; // Store the selected piece
                         square.style.border = '2px solid #FFFBF0'; // Highlight the selected piece
@@ -142,13 +143,57 @@
                 } else {
                     // Move piece
                     const selectedPiece = initialBoard[selectedSquare.row][selectedSquare.col];
-                    initialBoard[selectedSquare.row][selectedSquare.col] = '--';
-                    initialBoard[row][col] = selectedPiece;
+                    const legalMove = isLegalMove(selectedPiece, selectedSquare.row, selectedSquare.col, row, col);
+                    
+                    if (legalMove) {
+                        // Valid move, make the move
+                        initialBoard[selectedSquare.row][selectedSquare.col] = '--';
+                        initialBoard[row][col] = selectedPiece;
 
-                    // Remove border from old square and update the board
-                    document.querySelectorAll('.square').forEach(sq => sq.style.border = '');
-                    createBoard();
+                        // Remove border from old square and update the board
+                        document.querySelectorAll('.square').forEach(sq => sq.style.border = '');
+                        createBoard();
+                    } else {
+                        alert("Illegal move!");
+                    }
+
                     selectedSquare = null; // Deselect piece after move
+                }
+            }
+
+            // Function to check if the move is legal for each piece
+            function isLegalMove(piece, startRow, startCol, endRow, endCol) {
+                switch (piece) {
+                    case 'wp': // White pawn
+                        if (startCol === endCol && startRow - endRow === 1 && initialBoard[endRow][endCol] === '--') return true; // Move one square forward
+                        if (startCol === endCol && startRow === 6 && endRow === 4 && initialBoard[endRow][endCol] === '--' && initialBoard[5][endCol] === '--') return true; // Initial two square move
+                        if (Math.abs(startCol - endCol) === 1 && startRow - endRow === 1 && initialBoard[endRow][endCol].startsWith('b')) return true; // Capture diagonally
+                        return false;
+                    case 'bp': // Black pawn
+                        if (startCol === endCol && endRow - startRow === 1 && initialBoard[endRow][endCol] === '--') return true; // Move one square forward
+                        if (startCol === endCol && startRow === 1 && endRow === 3 && initialBoard[endRow][endCol] === '--' && initialBoard[2][endCol] === '--') return true; // Initial two square move
+                        if (Math.abs(startCol - endCol) === 1 && endRow - startRow === 1 && initialBoard[endRow][endCol].startsWith('w')) return true; // Capture diagonally
+                        return false;
+                    case 'wkn':
+                    case 'bkn': // Knight
+                        return (Math.abs(startRow - endRow) === 2 && Math.abs(startCol - endCol) === 1) || (Math.abs(startRow - endRow) === 1 && Math.abs(startCol - endCol) === 2);
+                    case 'wb':
+                    case 'bb': // Bishop
+                        if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol)) return true; // Diagonal move
+                        return false;
+                    case 'wc':
+                    case 'bc': // Rook
+                        if (startRow === endRow || startCol === endCol) return true; // Horizontal or vertical move
+                        return false;
+                    case 'wq':
+                    case 'bq': // Queen
+                        if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol) || startRow === endRow || startCol === endCol) return true; // Diagonal, horizontal, or vertical
+                        return false;
+                    case 'wk':
+                    case 'bk': // King
+                        return Math.abs(startRow - endRow) <= 1 && Math.abs(startCol - endCol) <= 1; // One square in any direction
+                    default:
+                        return false;
                 }
             }
 
