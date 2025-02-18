@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.css"> <!-- Chessboard.js CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script> <!-- Chess.js -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,7 +22,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            max-width: 80vh; /* Ensures it doesn't get too large */
+            max-width: 80vh;
             width: 100%;
         }
 
@@ -29,7 +31,7 @@
             grid-template-columns: repeat(8, min(10vw, 7vh));
             grid-template-rows: repeat(8, min(10vw, 7vh));
             gap: 0;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1); /* Soft shadow instead of border */
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
         }
 
         .square {
@@ -54,28 +56,15 @@
             background-size: cover;
             background-position: center;
         }
-
-        #comments {
-            margin-top: 20px;
-            font-size: 1.2em;
-            color: #fff;
-        }
     </style>
 </head>
 <body>
     <div class="chess-container">
         <div id="chessboard" class="chessboard"></div>
     </div>
-    <div id="comments"></div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stockfish.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const boardElement = document.getElementById('chessboard');
-            const commentsElement = document.getElementById('comments');
-            const chess = new Chess();
-            const stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish.js");
-            let gameOver = false;
 
             const initialBoard = [
                 ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
@@ -104,82 +93,35 @@
                 '--': ''
             };
 
-            // Create the board
-            function createBoard() {
-                boardElement.innerHTML = ''; // Clear the board
-
-                // Create the squares and pieces
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const square = document.createElement('div');
-                        square.classList.add('square');
-                        square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
-
-                        const piece = initialBoard[row][col];
-                        if (piece !== '--') {
-                            const img = document.createElement('img');
-                            img.src = pieceImages[piece];
-                            img.alt = piece;
-                            img.classList.add('piece');
-                            square.appendChild(img);
-                        }
-
-                        boardElement.appendChild(square);
-                    }
+            // Chessboard.js setup
+            const board = Chessboard('chessboard', {
+                draggable: true,
+                dropOffBoard: 'trash',
+                sparePieces: true,
+                pieceTheme: function (piece) {
+                    return pieceImages[piece] || ''; // Use the custom piece image
                 }
+            });
+
+            // Initialize Chess.js for game logic
+            const game = new Chess();
+
+            // Function for simple AI move (random)
+            function makeRandomMove() {
+                const moves = game.legalMoves();
+                const randomMove = moves[Math.floor(Math.random() * moves.length)];
+                game.uci(randomMove);  // Make the move
+                board.position(game.fen());  // Update the board
             }
 
-            // Function to update the board and show commentary
-            function updateBoard() {
-                const board = chess.board();
-                boardElement.innerHTML = '';
-                createBoard();
+            // Set up the board with the initial position
+            board.position(game.fen());
 
-                // Render the pieces
-                let index = 0;
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const square = boardElement.children[index];
-                        const piece = board[row][col];
-                        if (piece) {
-                            const img = document.createElement('img');
-                            img.src = pieceImages[piece.color + piece.type];
-                            img.classList.add('piece');
-                            square.appendChild(img);
-                        }
-                        index++;
-                    }
-                }
-            }
-
-            // AI Move Functionality
-            function makeMove() {
-                if (gameOver) return;
-
-                const moves = chess.ugly_moves();
-                const move = moves.length === 0 ? null : moves[0]; // Take the first available move
-                if (move) {
-                    chess.ugly_move(move);
-                    updateBoard();
-                    stockfish.postMessage("position fen " + chess.fen());
-                    stockfish.postMessage("go depth 5"); // Set AI depth for beginner level
-                }
-            }
-
-            // Handle Stockfish's response
-            stockfish.onmessage = function (event) {
-                if (event.data.includes("bestmove")) {
-                    const bestMove = event.data.split(" ")[1];
-                    chess.ugly_move(chess.move(bestMove));
-                    updateBoard();
-                    commentsElement.innerHTML = `S.T.A.N.'s Move: ${bestMove} - Stay fresh, stay bold!`;
-                }
-            };
-
-            // Start the game
-            createBoard();
-            updateBoard();
-            makeMove(); // AI's first move
+            // Make a move by AI after every human move
+            board.on('drop', function (source, target) {
+                game.uci(source + target);  // Apply the human move
+                makeRandomMove();  // AI move
+            });
         });
     </script>
 </body>
