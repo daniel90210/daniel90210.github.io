@@ -1,60 +1,65 @@
-let stockfish = new Worker('stockfish.js');
-
-stockfish.onmessage = function(event) {
-    let message = event.data;
-    if (message.includes('bestmove')) {
-        let bestMove = message.split(' ')[1]; // Extract the best move from Stockfish
-        handleAIMove(bestMove);
-    }
+const board = document.getElementById("chessboard");
+const pieces = {
+    wp: "♙", wn: "♞", wb: "♗", wr: "♖", wq: "♕", wk: "♔",
+    bp: "♟", bn: "♞", bb: "♗", br: "♖", bq: "♕", bk: "♔"
 };
 
-function sendToStockfish(command) {
-    stockfish.postMessage(command);
+let currentPlayer = "white";
+let boardState = initialBoardState();
+
+function initialBoardState() {
+    return {
+        a2: 'wp', b2: 'wp', c2: 'wp', d2: 'wp', e2: 'wp', f2: 'wp', g2: 'wp', h2: 'wp',
+        a7: 'bp', b7: 'bp', c7: 'bp', d7: 'bp', e7: 'bp', f7: 'bp', g7: 'bp', h7: 'bp',
+        a1: 'wr', b1: 'wn', c1: 'wb', d1: 'wq', e1: 'wk', f1: 'wb', g1: 'wn', h1: 'wr',
+        a8: 'br', b8: 'bn', c8: 'bb', d8: 'bq', e8: 'bk', f8: 'bb', g8: 'bn', h8: 'br',
+    };
 }
 
-function startGame() {
-    sendToStockfish('uci');  // Start Stockfish engine
-    sendToStockfish('isready');  // Wait for the engine to be ready
-    sendToStockfish('position startpos');  // Set the starting position
-    sendToStockfish('go movetime 1000');  // Give Stockfish time to make a move
+function setupBoard() {
+    board.innerHTML = '';
+    for (let row = 8; row >= 1; row--) {
+        for (let col = 'a'.charCodeAt(0); col <= 'h'.charCodeAt(0); col++) {
+            const square = document.createElement("div");
+            const squareId = String.fromCharCode(col) + row;
+            square.id = squareId;
+            square.className = (row % 2 === 0) ^ (col % 2 === 0) ? 'black' : 'white';
+            square.addEventListener('click', () => selectPiece(squareId));
+            square.innerHTML = pieces[boardState[squareId]] || '';
+            board.appendChild(square);
+        }
+    }
 }
-function handleAIMove(move) {
-    // Parse the move and update the board array accordingly
-    // Example: 'e2e4' → move piece from e2 to e4
-    const fromSquare = move.substring(0, 2); // e.g., 'e2'
-    const toSquare = move.substring(2, 4); // e.g., 'e4'
 
-    // Convert board positions (e.g., 'e2' to row/col indices)
-    const fromRow = 8 - parseInt(fromSquare[1]);
-    const fromCol = fromSquare.charCodeAt(0) - 'a'.charCodeAt(0);
-    const toRow = 8 - parseInt(toSquare[1]);
-    const toCol = toSquare.charCodeAt(0) - 'a'.charCodeAt(0);
-
-    // Move the piece on the board
-    initialBoard[toRow][toCol] = initialBoard[fromRow][fromCol];
-    initialBoard[fromRow][fromCol] = '--';
-
-    // Re-render the board with the updated state
-    createBoard();
-
-    // Allow the user to make their next move
+function selectPiece(squareId) {
+    if (currentPlayer === "white" && boardState[squareId]?.startsWith('w')) {
+        highlightPossibleMoves(squareId);
+    } else if (currentPlayer === "black" && boardState[squareId]?.startsWith('b')) {
+        highlightPossibleMoves(squareId);
+    } else {
+        // Handle moving pieces or other actions here
+    }
 }
-function makeUserMove(from, to) {
-    // Similar to how AI moves are handled, update the board with the user's move
-    // Then send the updated position to Stockfish to get its response
-    const fromRow = 8 - parseInt(from[1]);
-    const fromCol = from.charCodeAt(0) - 'a'.charCodeAt(0);
-    const toRow = 8 - parseInt(to[1]);
-    const toCol = to.charCodeAt(0) - 'a'.charCodeAt(0);
 
-    initialBoard[toRow][toCol] = initialBoard[fromRow][fromCol];
-    initialBoard[fromRow][fromCol] = '--';
-
-    // Update the UI
-    createBoard();
-
-    // Send the new board position to Stockfish
-    let fen = generateFEN();
-    sendToStockfish(`position fen ${fen}`);
-    sendToStockfish('go movetime 1000');
+function highlightPossibleMoves(squareId) {
+    // Implement logic for determining and highlighting possible moves
+    // For simplicity, we'll just clear highlights after one click
+    resetHighlights();
 }
+
+function resetHighlights() {
+    const squares = board.getElementsByTagName("div");
+    for (let square of squares) {
+        square.classList.remove("highlight");
+    }
+}
+
+// AI moves for black pieces
+function aiMove() {
+    // Implement a simple AI to choose a random valid move
+}
+
+// Initialize the chess board on page load
+document.addEventListener("DOMContentLoaded", () => {
+    setupBoard();
+});
