@@ -3,279 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Game with Stockfish AI</title>
+    <title>Chess Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #121212;
-            overflow: hidden;
-        }
-
-        .chess-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            max-width: 80vh;
-            width: 100%;
-        }
-
-        .chessboard {
+        .board {
             display: grid;
-            grid-template-columns: repeat(8, min(10vw, 7vh));
-            grid-template-rows: repeat(8, min(10vw, 7vh));
-            gap: 0;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
         }
-
         .square {
-            width: min(10vw, 7vh);
-            height: min(10vw, 7vh);
+            width: 50px;
+            height: 50px;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
         }
-
-        .white {
-            background-color: #FFFED8;
-            background-image: radial-gradient(rgba(255,255,255,0.5) 10%, transparent 70%),
-                      linear-gradient(45deg, rgba(200, 200, 200, 0.2) 25%, transparent 25%);
-            background-blend-mode: overlay;
-        }
-
-        .black {
-            background-color: #51B02B;
-            background-image: radial-gradient(rgba(81, 176, 43, 0.5) 10%, transparent 70%),
-                      linear-gradient(45deg, rgba(30, 100, 20, 0.2) 25%, transparent 25%);
-            background-blend-mode: overlay;
-        }
-
+        .white { background-color: #FFFBF0; }
+        .black { background-color: #062E03; }
         .piece {
-            width: 90%;
-            height: 90%;
-            background-size: cover;
-            background-position: center;
-        }
-
-        #status {
-            color: white;
-            font-size: 20px;
-            margin-top: 20px;
-            text-align: center;
+            width: 45px;
+            height: 45px;
         }
     </style>
 </head>
 <body>
-    <div class="chess-container">
-        <div id="chessboard" class="chessboard"></div>
-    </div>
-    <div id="status"></div>
+    <div class="board" id="board"></div>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stockfish/11.0.0/stockfish.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const boardElement = document.getElementById('chessboard');
-            const statusElement = document.getElementById('status');
-            const initialBoard = [
-                ['bc', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'bc'],
-                ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
-                ['--', '--', '--', '--', '--', '--', '--', '--'],
-                ['--', '--', '--', '--', '--', '--', '--', '--'],
-                ['--', '--', '--', '--', '--', '--', '--', '--'],
-                ['--', '--', '--', '--', '--', '--', '--', '--'],
-                ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
-                ['wc', 'wkn', 'wb', 'wq', 'wk', 'wb', 'wkn', 'wc']
-            ];
+        const chess = new Chess();
+        let boardElement = document.getElementById("board");
+        let selectedPiece = null;
+        let isWhiteTurn = true;
+        const stockfish = new Worker("https://stockfish.online/stockfish.js");
 
-            const pieceImages = {
-                'wp': 'pieces/wp.PNG',
-                'wkn': 'pieces/wkn.PNG',
-                'wb': 'pieces/wb.PNG',
-                'wq': 'pieces/wq.PNG',
-                'wk': 'pieces/wk.PNG',
-                'wc': 'pieces/wc.PNG',
-                'bp': 'pieces/bp.PNG',
-                'bkn': 'pieces/bkn.PNG',
-                'bb': 'pieces/bb.PNG',
-                'bq': 'pieces/bq.PNG',
-                'bk': 'pieces/bk.PNG',
-                'bc': 'pieces/bc.PNG',
-                '--': ''
-            };
+        function updateBoard() {
+            let board = chess.board();
+            boardElement.innerHTML = '';
 
-            let selectedPiece = null;
-            let selectedRow = null;
-            let selectedCol = null;
-            let isWhiteTurn = true; // White goes first
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    let square = document.createElement('div');
+                    square.classList.add('square', (row + col) % 2 === 0 ? 'white' : 'black');
 
-            // Initialize Stockfish AI
-            const stockfish = Stockfish();
-            stockfish.postMessage('uci');
-            stockfish.postMessage('position startpos');
-
-            function generateFEN() {
-                let fen = '';
-                for (let row = 0; row < 8; row++) {
-                    let emptyCount = 0;
-                    for (let col = 0; col < 8; col++) {
-                        const piece = initialBoard[row][col];
-                        if (piece === '--') {
-                            emptyCount++;
-                        } else {
-                            if (emptyCount > 0) {
-                                fen += emptyCount;
-                                emptyCount = 0;
-                            }
-                            fen += piece;
-                        }
+                    let piece = board[row][col];
+                    if (piece) {
+                        let img = document.createElement('img');
+                        img.src = `pieces/${piece.color}${piece.type}.PNG`;
+                        img.classList.add('piece');
+                        square.appendChild(img);
                     }
-                    if (emptyCount > 0) {
-                        fen += emptyCount;
-                    }
-                    if (row < 7) {
-                        fen += '/';
-                    }
-                }
-                fen += ' ' + (isWhiteTurn ? 'w' : 'b') + ' KQkq - 0 1'; // Turn and game state details
-                return fen;
-            }
 
-            function createBoard() {
-                boardElement.innerHTML = '';
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const square = document.createElement('div');
-                        const piece = initialBoard[row][col];
-                        square.classList.add('square');
-                        square.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
+                    square.addEventListener('click', function () {
+                        handleSquareClick(row, col);
+                    });
 
-                        if (piece !== '--') {
-                            const img = document.createElement('img');
-                            img.src = pieceImages[piece];
-                            img.alt = piece;
-                            img.classList.add('piece');
-                            square.appendChild(img);
-                        }
-
-                        square.addEventListener('click', function () {
-                            handleSquareClick(row, col);
-                        });
-
-                        boardElement.appendChild(square);
-                    }
+                    boardElement.appendChild(square);
                 }
             }
+        }
 
-            function handleSquareClick(row, col) {
-                if (selectedPiece) {
-                    if (isValidMove(selectedPiece, selectedRow, selectedCol, row, col)) {
-                        makeMove(selectedRow, selectedCol, row, col);
-                        createBoard();
-                        if (isWhiteTurn) {
-                            statusElement.textContent = 'White Turn';
-                        } else {
-                            statusElement.textContent = 'Black Turn';
-                        }
+        function handleSquareClick(row, col) {
+            let square = String.fromCharCode(97 + col) + (8 - row);
 
-                        isWhiteTurn = !isWhiteTurn;
-                        selectedPiece = null;
-                        selectedRow = null;
-                        selectedCol = null;
+            if (selectedPiece) {
+                let move = { from: selectedPiece, to: square };
+                let result = chess.move(move);
 
-                        if (!isWhiteTurn) {
-                            stockfish.postMessage('position fen ' + generateFEN());
-                            stockfish.postMessage('go depth 10');
-                        }
-                    } else {
-                        selectedPiece = null;
-                        selectedRow = null;
-                        selectedCol = null;
+                if (result) {
+                    updateBoard();
+                    selectedPiece = null;
+                    isWhiteTurn = !isWhiteTurn;
+
+                    if (!isWhiteTurn) {
+                        stockfish.postMessage('position fen ' + chess.fen());
+                        stockfish.postMessage('go depth 10');
                     }
-                } else if (initialBoard[row][col] !== '--' && isWhiteTurn && initialBoard[row][col].charAt(0) === 'w') {
-                    selectedPiece = initialBoard[row][col];
-                    selectedRow = row;
-                    selectedCol = col;
+                } else {
+                    selectedPiece = null;
                 }
+            } else if (chess.get(square)?.color === 'w') {
+                selectedPiece = square;
             }
+        }
 
-            function isValidMove(piece, startRow, startCol, endRow, endCol) {
-                const pieceType = piece.slice(1); 
-                const color = piece.charAt(0); 
-                const rowDiff = Math.abs(endRow - startRow);
-                const colDiff = Math.abs(endCol - startCol);
+        stockfish.onmessage = function(event) {
+            if (event.data.includes("bestmove")) {
+                let move = event.data.split(" ")[1];
+                let result = chess.move({ from: move.substring(0, 2), to: move.substring(2, 4) });
 
-                switch (pieceType) {
-                    case 'p': 
-                        if (color === 'w') {
-                            if (startCol === endCol && rowDiff === 1 && initialBoard[endRow][endCol] === '--') return true;
-                            if (startCol === endCol && rowDiff === 2 && startRow === 6 && initialBoard[endRow][endCol] === '--') return true;
-                        } else if (color === 'b') {
-                            if (startCol === endCol && rowDiff === 1 && initialBoard[endRow][endCol] === '--') return true;
-                            if (startCol === endCol && rowDiff === 2 && startRow === 1 && initialBoard[endRow][endCol] === '--') return true;
-                        }
-                        break;
-                    case 'r': 
-                        if (rowDiff === 0 || colDiff === 0) return !isBlocked(startRow, startCol, endRow, endCol);
-                        break;
-                    case 'n': 
-                        if ((rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2)) return true;
-                        break;
-                    case 'b': 
-                        if (rowDiff === colDiff) return !isBlocked(startRow, startCol, endRow, endCol);
-                        break;
-                    case 'q': 
-                        if (rowDiff === colDiff || rowDiff === 0 || colDiff === 0) return !isBlocked(startRow, startCol, endRow, endCol);
-                        break;
-                    case 'k': 
-                        if (rowDiff <= 1 && colDiff <= 1) return true;
-                        break;
-                }
-                return false;
-            }
-
-            function isBlocked(startRow, startCol, endRow, endCol) {
-                const rowDir = endRow > startRow ? 1 : endRow < startRow ? -1 : 0;
-                const colDir = endCol > startCol ? 1 : endCol < startCol ? -1 : 0;
-
-                let row = startRow + rowDir;
-                let col = startCol + colDir;
-
-                while (row !== endRow || col !== endCol) {
-                    if (initialBoard[row][col] !== '--') return true; 
-                    row += rowDir;
-                    col += colDir;
-                }
-                return false;
-            }
-
-            function makeMove(startRow, startCol, endRow, endCol) {
-                initialBoard[endRow][endCol] = initialBoard[startRow][startCol];
-                initialBoard[startRow][startCol] = '--';
-            }
-
-            stockfish.onmessage = function(event) {
-                if (event.data.includes("bestmove")) {
-                    const move = event.data.split(' ')[1];
-                    const from = move.substring(0, 2);
-                    const to = move.substring(2, 4);
-                    const fromRow = 8 - parseInt(from[1]);
-                    const fromCol = from.charCodeAt(0) - 97;
-                    const toRow = 8 - parseInt(to[1]);
-                    const toCol = to.charCodeAt(0) - 97;
-                    makeMove(fromRow, fromCol, toRow, toCol);
-                    createBoard();
+                if (result) {
+                    updateBoard();
                     isWhiteTurn = true;
-                    statusElement.textContent = 'White Turn';
                 }
-            };
+            }
+        };
 
-            createBoard();
-            statusElement.textContent = 'White Turn';
-        });
+        updateBoard();
     </script>
 </body>
 </html>
