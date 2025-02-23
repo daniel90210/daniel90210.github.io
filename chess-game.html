@@ -1,104 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Game</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.js"></script>
-    <style>
-        .board {
-            display: grid;
-            grid-template-columns: repeat(8, 50px);
-            grid-template-rows: repeat(8, 50px);
-        }
-        .square {
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .white { background-color: #FFFBF0; }
-        .black { background-color: #062E03; }
-        .piece {
-            width: 45px;
-            height: 45px;
-        }
-    </style>
-</head>
-<body>
-    <div class="board" id="board"></div>
-    
-    <script>
-        const chess = new Chess();
-        let boardElement = document.getElementById("board");
-        let selectedPiece = null;
-        let isWhiteTurn = true;
-        const stockfish = new Worker("https://stockfish.online/stockfish.js");
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const boardElement = document.getElementById('chessboard');
+        const statusElement = document.getElementById('status');
 
-        function updateBoard() {
-            let board = chess.board();
-            boardElement.innerHTML = '';
-
-            for (let row = 0; row < 8; row++) {
-                for (let col = 0; col < 8; col++) {
-                    let square = document.createElement('div');
-                    square.classList.add('square', (row + col) % 2 === 0 ? 'white' : 'black');
-
-                    let piece = board[row][col];
-                    if (piece) {
-                        let img = document.createElement('img');
-                        img.src = `pieces/${piece.color}${piece.type}.PNG`;
-                        img.classList.add('piece');
-                        square.appendChild(img);
-                    }
-
-                    square.addEventListener('click', function () {
-                        handleSquareClick(row, col);
-                    });
-
-                    boardElement.appendChild(square);
-                }
+        const chess = new Chess(); // Initializes chess.js
+        const board = Chessboard(boardElement, {
+            position: 'start',
+            pieceTheme: function (piece) {
+                return `pieces/${piece}.PNG`; // Load custom piece images
+            },
+            draggable: true,
+            onDrop: function (source, target) {
+                const move = chess.move({ from: source, to: target, promotion: 'q' });
+                if (move === null) return 'snapback'; // Invalid move
+                updateStatus();
             }
+        });
+
+        function updateStatus() {
+            statusElement.textContent = chess.turn() === 'w' ? "White's Turn" : "Black's Turn";
         }
 
-        function handleSquareClick(row, col) {
-            let square = String.fromCharCode(97 + col) + (8 - row);
-
-            if (selectedPiece) {
-                let move = { from: selectedPiece, to: square };
-                let result = chess.move(move);
-
-                if (result) {
-                    updateBoard();
-                    selectedPiece = null;
-                    isWhiteTurn = !isWhiteTurn;
-
-                    if (!isWhiteTurn) {
-                        stockfish.postMessage('position fen ' + chess.fen());
-                        stockfish.postMessage('go depth 10');
-                    }
-                } else {
-                    selectedPiece = null;
-                }
-            } else if (chess.get(square)?.color === 'w') {
-                selectedPiece = square;
-            }
-        }
-
-        stockfish.onmessage = function(event) {
-            if (event.data.includes("bestmove")) {
-                let move = event.data.split(" ")[1];
-                let result = chess.move({ from: move.substring(0, 2), to: move.substring(2, 4) });
-
-                if (result) {
-                    updateBoard();
-                    isWhiteTurn = true;
-                }
-            }
-        };
-
-        updateBoard();
-    </script>
-</body>
-</html>
+        updateStatus();
+    });
+</script>
