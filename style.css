@@ -1,4 +1,27 @@
-html {
-  height: 100%;
-  width: 100%;
+#chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    width: 400px;
+    height: 400px;
+}
+
+#chessboard div {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+}
+
+.white {
+    background-color: #FFFBF0;
+}
+
+.black {
+    background-color: #062E03;
+}
+
+.highlight {
+    background-color: yellow; /* Highlight color */
 }
