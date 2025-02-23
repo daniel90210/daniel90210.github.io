@@ -1,27 +1,38 @@
-#chessboard {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    width: 400px;
-    height: 400px;
-}
-
-#chessboard div {
-    width: 50px;
-    height: 50px;
+body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 32px;
+    height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
 }
 
-.white {
-    background-color: #FFFBF0;
+.chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 100px);
+    grid-template-rows: repeat(8, 100px);
 }
 
-.black {
-    background-color: #062E03;
+.chessboard div {
+    width: 100px;
+    height: 100px;
 }
 
-.highlight {
-    background-color: yellow; /* Highlight color */
+.chessboard div:nth-child(odd) {
+    background-color: #FFF6C4; /* White squares */
+}
+
+.chessboard div:nth-child(even) {
+    background-color: #3F0303; /* Black squares */
+}
+
+.chessboard div:nth-child(8n+1),
+.chessboard div:nth-child(8n+2),
+.chessboard div:nth-child(8n+3),
+.chessboard div:nth-child(8n+4),
+.chessboard div:nth-child(8n+5),
+.chessboard div:nth-child(8n+6),
+.chessboard div:nth-child(8n+7),
+.chessboard div:nth-child(8n+8) {
+    background-color: #3F0303; /* Alternate colors */
 }
