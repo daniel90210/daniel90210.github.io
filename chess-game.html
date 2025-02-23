@@ -1,26 +1,39 @@
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const boardElement = document.getElementById('chessboard');
-        const statusElement = document.getElementById('status');
-
-        const chess = new Chess(); // Initializes chess.js
-        const board = Chessboard(boardElement, {
-            position: 'start',
-            pieceTheme: function (piece) {
-                return `pieces/${piece}.PNG`; // Load custom piece images
-            },
-            draggable: true,
-            onDrop: function (source, target) {
-                const move = chess.move({ from: source, to: target, promotion: 'q' });
-                if (move === null) return 'snapback'; // Invalid move
-                updateStatus();
-            }
-        });
-
-        function updateStatus() {
-            statusElement.textContent = chess.turn() === 'w' ? "White's Turn" : "Black's Turn";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Game</title>
+  <!-- Chessboard.js CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.css">
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <!-- Chessboard.js JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.js"></script>
+  <!-- Chess.js JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <style>
+    #chessboard {
+      width: 400px;
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="chessboard"></div>
+  <script>
+    $(document).ready(function() {
+      var game = new Chess();
+      var board = Chessboard('chessboard', {
+        draggable: true,
+        position: 'start',
+        pieceTheme: 'pieces/{piece}.png', // Custom piece images
+        onDrop: function(source, target) {
+          var move = game.move({ from: source, to: target, promotion: 'q' });
+          if (move === null) return 'snapback';
         }
-
-        updateStatus();
+      });
     });
-</script>
+  </script>
+</body>
+</html>
